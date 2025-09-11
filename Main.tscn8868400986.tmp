@@ -1,0 +1,150 @@
+[gd_scene load_steps=5 format=3 uid="uid://ctsmkdkwceana"]
+
+[ext_resource type="Script" uid="uid://d1lbpd0jwt2wv" path="res://scripts/main.gd" id="1_glv2v"]
+[ext_resource type="Script" uid="uid://bkinb11cqi0ua" path="res://scripts/SoulsPanel.gd" id="2_r0du0"]
+[ext_resource type="Script" uid="uid://cfxwulywccjpv" path="res://scripts/Workbench.gd" id="3_cm0pq"]
+[ext_resource type="Script" uid="uid://cihlndsa42il8" path="res://scripts/OngoingPanel.gd" id="4_cm0pq"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_glv2v")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="LeftPane" type="VBoxContainer" parent="MarginContainer/HSplitContainer"]
+layout_mode = 2
+script = ExtResource("2_r0du0")
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer/LeftPane"]
+layout_mode = 2
+text = "Souls"
+
+[node name="SoulsList" type="ItemList" parent="MarginContainer/HSplitContainer/LeftPane"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="MarginContainer/HSplitContainer/LeftPane"]
+layout_mode = 2
+text = "New NPC"
+
+[node name="RightTabs" type="TabContainer" parent="MarginContainer/HSplitContainer"]
+layout_mode = 2
+current_tab = 0
+
+[node name="Workbench" type="Control" parent="MarginContainer/HSplitContainer/RightTabs"]
+layout_mode = 2
+script = ExtResource("3_cm0pq")
+metadata/_tab_index = 0
+
+[node name="WB_VBox" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="WB_Rows" type="HBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox"]
+layout_mode = 2
+
+[node name="Panel_Offer" type="PanelContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Offer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Offer/VBoxContainer"]
+layout_mode = 2
+text = "Offer"
+
+[node name="OfferList" type="ItemList" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Offer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Panel_Ask" type="PanelContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Ask"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Ask/VBoxContainer"]
+layout_mode = 2
+text = "Ask"
+
+[node name="AskList" type="ItemList" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Ask/VBoxContainer"]
+layout_mode = 2
+
+[node name="Panel_Clause" type="PanelContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Clause"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Clause/VBoxContainer"]
+layout_mode = 2
+text = "Clause"
+
+[node name="ClauseList" type="ItemList" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/Panel_Clause/VBoxContainer"]
+layout_mode = 2
+
+[node name="OptionsPanel" type="PanelContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/OptionsPanel"]
+layout_mode = 2
+
+[node name="OptionsTitle" type="Label" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Options"
+
+[node name="Scroll" type="ScrollContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="OptionsBox" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll"]
+layout_mode = 2
+
+[node name="Hint" type="Label" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Click Offer / Ask / Clause to see options."
+
+[node name="WB_Footer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox"]
+layout_mode = 2
+
+[node name="AcceptanceBar" type="ProgressBar" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Footer"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="MarginContainer/HSplitContainer/RightTabs/Workbench/WB_VBox/WB_Footer"]
+layout_mode = 2
+text = "Finish"
+
+[node name="Ongoing" type="Control" parent="MarginContainer/HSplitContainer/RightTabs"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/RightTabs/Ongoing"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("4_cm0pq")
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer/RightTabs/Ongoing/VBoxContainer"]
+layout_mode = 2
+text = "Ongoing Contracts"
+
+[node name="OngoingList" type="ItemList" parent="MarginContainer/HSplitContainer/RightTabs/Ongoing/VBoxContainer"]
+layout_mode = 2

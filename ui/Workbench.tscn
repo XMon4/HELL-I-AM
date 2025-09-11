@@ -1,0 +1,146 @@
+[gd_scene load_steps=9 format=3 uid="uid://bkmc758a3qkjn"]
+
+[ext_resource type="Script" uid="uid://cfxwulywccjpv" path="res://scripts/Workbench.gd" id="1_ogq0w"]
+[ext_resource type="Texture2D" uid="uid://di3mtpkqwwdom" path="res://art/Char.png" id="2_wct73"]
+[ext_resource type="Texture2D" uid="uid://jx1k34i0uaxx" path="res://art/Contract.png" id="3_nelf4"]
+[ext_resource type="Script" uid="uid://bm5ltoj3nnbcd" path="res://scripts/ContractSection.gd" id="4_juv10"]
+[ext_resource type="Texture2D" uid="uid://cix82pbq1ibea" path="res://art/box.png" id="5_2kcg2"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_trn2v"]
+content_margin_left = 218.0
+content_margin_top = 333.0
+content_margin_right = 241.0
+content_margin_bottom = 206.0
+texture = ExtResource("3_nelf4")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_trn2v"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5vvyt"]
+texture = ExtResource("5_2kcg2")
+
+[node name="Workbench" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ogq0w")
+metadata/_tab_index = 0
+
+[node name="CharTex" type="TextureRect" parent="."]
+z_index = -5
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -915.0
+offset_top = 187.0
+offset_right = -505.0
+offset_bottom = 809.0
+grow_horizontal = 0
+size_flags_horizontal = 3
+mouse_filter = 2
+texture = ExtResource("2_wct73")
+stretch_mode = 4
+
+[node name="WB_VBox" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = -0.492035
+offset_top = -16.8702
+offset_right = 1804.51
+offset_bottom = 1556.13
+scale = Vector2(0.587462, 0.784159)
+
+[node name="WB_Rows" type="HSplitContainer" parent="WB_VBox"]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.57
+
+[node name="ScrollHolder" type="AspectRatioContainer" parent="WB_VBox/WB_Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Parchment" type="PanelContainer" parent="WB_VBox/WB_Rows/ScrollHolder"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_trn2v")
+
+[node name="ContractScroll" type="PanelContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_trn2v")
+
+[node name="Scroll" type="ScrollContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll"]
+layout_mode = 2
+
+[node name="ContractBox" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 6
+
+[node name="Section_Offer" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox"]
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("4_juv10")
+
+[node name="Header" type="Button" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Offer"]
+layout_mode = 2
+text = "Offer"
+
+[node name="Items" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Offer"]
+layout_mode = 2
+
+[node name="Section_Ask" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("4_juv10")
+
+[node name="Header" type="Button" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Ask"]
+layout_mode = 2
+text = "Ask"
+
+[node name="Items" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Ask"]
+layout_mode = 2
+
+[node name="Section_Clause" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox"]
+layout_mode = 2
+size_flags_vertical = 8
+script = ExtResource("4_juv10")
+
+[node name="Header" type="Button" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Clause"]
+layout_mode = 2
+text = "Clauses & Conditions"
+
+[node name="Items" type="VBoxContainer" parent="WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Clause"]
+layout_mode = 2
+
+[node name="OptionsPanel" type="PanelContainer" parent="WB_VBox/WB_Rows"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.78
+theme_override_styles/panel = SubResource("StyleBoxTexture_5vvyt")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="WB_VBox/WB_Rows/OptionsPanel"]
+layout_mode = 2
+
+[node name="OptionsTitle" type="Label" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Options"
+
+[node name="Scroll" type="ScrollContainer" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="OptionsBox" type="VBoxContainer" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll"]
+layout_mode = 2
+
+[node name="Hint" type="Label" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Click Offer / Ask / Clause to see options."
+
+[node name="WB_Footer" type="VBoxContainer" parent="WB_VBox"]
+layout_mode = 2
+
+[node name="AcceptanceBar" type="ProgressBar" parent="WB_VBox/WB_Footer"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="WB_VBox/WB_Footer"]
+layout_mode = 2
+text = "Finish"

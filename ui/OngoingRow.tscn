@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cpr2nsjyqqhgu"]
+
+[node name="OngoingRow" type="VBoxContainer"]
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+text = "Human 5 — signed (e.g.)"
+
+[node name="Body" type="Label" parent="."]
+layout_mode = 2

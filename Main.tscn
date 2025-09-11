@@ -1,0 +1,147 @@
+[gd_scene load_steps=13 format=3 uid="uid://ctsmkdkwceana"]
+
+[ext_resource type="Script" uid="uid://d1lbpd0jwt2wv" path="res://scripts/main.gd" id="1_glv2v"]
+[ext_resource type="Script" uid="uid://b87q6xsdnxpyv" path="res://ui/TopBar.gd" id="2_03owx"]
+[ext_resource type="Script" uid="uid://bkinb11cqi0ua" path="res://scripts/SoulsPanel.gd" id="2_r0du0"]
+[ext_resource type="Texture2D" uid="uid://becj2nutqhn1d" path="res://art/Bckgrnd.png" id="4_trn2v"]
+[ext_resource type="PackedScene" uid="uid://bkmc758a3qkjn" path="res://ui/Workbench.tscn" id="5_03owx"]
+[ext_resource type="PackedScene" uid="uid://cucwjq30slw2" path="res://ui/Ongoing.tscn" id="6_wkp8b"]
+[ext_resource type="PackedScene" uid="uid://bpecisqsbhpii" path="res://ui/CursesPanel.tscn" id="8_20pc6"]
+[ext_resource type="PackedScene" uid="uid://wr28cwat41i4" path="res://ui/ProducerPanel.tscn" id="10_20pc6"]
+[ext_resource type="PackedScene" uid="uid://clgnqer6fqhds" path="res://ui/MinesPanel.tscn" id="10_wkp8b"]
+[ext_resource type="PackedScene" uid="uid://xqvabfmpocj1" path="res://ui/CasinoPanel.tscn" id="11_5vvyt"]
+[ext_resource type="PackedScene" uid="uid://yybk5ubse0pf" path="res://ui/NPCShopPanel.tscn" id="12_5vvyt"]
+[ext_resource type="PackedScene" uid="uid://b2yvynlies7dm" path="res://SaveLoadMenu.tscn" id="12_c6i3y"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_glv2v")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="TopBar" type="HBoxContainer" parent="UILayer"]
+z_index = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -229.0
+offset_bottom = 40.0
+grow_horizontal = 0
+script = ExtResource("2_03owx")
+
+[node name="NextDayBtn" type="Button" parent="UILayer/TopBar"]
+layout_mode = 2
+text = "Next Day"
+
+[node name="MoneyLabel" type="Label" parent="UILayer/TopBar"]
+layout_mode = 2
+text = "M: 0"
+
+[node name="OreLabel" type="Label" parent="UILayer/TopBar"]
+layout_mode = 2
+text = "O: 0"
+
+[node name="SoulsLabel" type="Label" parent="UILayer/TopBar"]
+layout_mode = 2
+text = "S: 0"
+
+[node name="DayLabel" type="Label" parent="UILayer/TopBar"]
+layout_mode = 2
+text = "Day 1"
+
+[node name="MenuBtn" type="Button" parent="UILayer/TopBar"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = -9.0
+offset_right = 439.0
+offset_bottom = 475.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.790639, 0.663795)
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="OfficeBG" type="TextureRect" parent="MarginContainer"]
+z_index = -10
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+texture = ExtResource("4_trn2v")
+stretch_mode = 6
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="LeftPane" type="VBoxContainer" parent="MarginContainer/HSplitContainer"]
+z_index = 1
+layout_mode = 2
+script = ExtResource("2_r0du0")
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer/LeftPane"]
+layout_mode = 2
+text = "Souls"
+
+[node name="SoulsList" type="ItemList" parent="MarginContainer/HSplitContainer/LeftPane"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="MarginContainer/HSplitContainer/LeftPane"]
+layout_mode = 2
+text = "New NPC"
+
+[node name="RightTabs" type="TabContainer" parent="MarginContainer/HSplitContainer"]
+layout_mode = 2
+current_tab = 1
+
+[node name="Workbench" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("5_03owx")]
+visible = false
+layout_mode = 2
+
+[node name="Ongoing" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("6_wkp8b")]
+visible = true
+layout_mode = 2
+
+[node name="Mines" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("10_wkp8b")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="Curses" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("8_20pc6")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 3
+
+[node name="Shop" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("12_5vvyt")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 4
+
+[node name="Fame" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("10_20pc6")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 5
+
+[node name="Casino" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("11_5vvyt")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 6
+
+[node name="MenusLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" parent="MenusLayer" instance=ExtResource("12_c6i3y")]
+visible = false

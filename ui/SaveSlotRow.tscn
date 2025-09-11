@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://boeaw52btmwwk"]
+
+[node name="SaveSlotRow" type="HBoxContainer"]
+
+[node name="Name" type="Label" parent="."]
+layout_mode = 2
+text = "Slot 1"
+
+[node name="Meta" type="Label" parent="."]
+layout_mode = 2
+text = "Empty"
+
+[node name="Save" type="Button" parent="."]
+layout_mode = 2
+
+[node name="Load" type="Button" parent="."]
+layout_mode = 2
+
+[node name="Delete" type="Button" parent="."]
+layout_mode = 2

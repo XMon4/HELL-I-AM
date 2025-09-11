@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://namkn8cqxynm"]
+
+[node name="NpcShopRow" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="Owned" type="Label" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="Desc" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Cost" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Hire" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Hire"
