@@ -48,3 +48,7 @@ text = "Desc"
 [node name="Cost" type="Label" parent="ScrollContainer/Rows/RowTemplate/VBoxContainer"]
 layout_mode = 2
 text = "Cost"
+
+[node name="Hire" type="Button" parent="ScrollContainer/Rows/RowTemplate/VBoxContainer"]
+layout_mode = 2
+text = "Hire"
