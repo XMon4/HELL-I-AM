@@ -31,8 +31,8 @@ z_index = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -229.0
-offset_bottom = 40.0
+offset_left = -286.0
+offset_bottom = 31.0
 grow_horizontal = 0
 script = ExtResource("2_03owx")
 
@@ -58,6 +58,7 @@ text = "Day 1"
 
 [node name="MenuBtn" type="Button" parent="UILayer/TopBar"]
 layout_mode = 2
+text = "Save"
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -113,7 +114,6 @@ visible = false
 layout_mode = 2
 
 [node name="Ongoing" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("6_wkp8b")]
-visible = true
 layout_mode = 2
 
 [node name="Mines" parent="MarginContainer/HSplitContainer/RightTabs" instance=ExtResource("10_wkp8b")]

@@ -34,8 +34,15 @@ func _on_soul_selected(idx: int) -> void:
 	if workbench and workbench.has_method("set_current_soul"):
 		workbench.set_current_soul(idx)
 
-func _on_contract_ready(soul_index: int, _offers: Array[String], _asks: Array[String], _clauses: Array[String], acceptance: float) -> void:
-	var display_name: String = GameDB.name_by_index(soul_index)
-	var title: String = "Contract with %s" % display_name
-	if ongoing_panel:
-		ongoing_panel.add_contract(title, acceptance)
+func _on_contract_ready(
+	soul_index: int,
+	offers: Array[String],
+	asks: Array[String],
+	clauses: Array[String],
+	acceptance: float
+) -> void:
+	var name: String = GameDB.name_by_index(soul_index)
+	get_tree().call_group_flags(
+		SceneTree.GROUP_CALL_DEFERRED, "ongoing_panel",
+		"add_contract_entry", name, offers, asks, clauses, acceptance
+	)

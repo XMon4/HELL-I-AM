@@ -404,7 +404,7 @@ func _on_finish() -> void:
 	var p: float = float(bar.value) / 100.0
 
 	# --- ECONOMY EFFECTS ---
-	# Deduct offered Money (strings like "Money: $1000" or "Money: 1000")
+	# Deduct offered Money
 	for o in offers:
 		var s := String(o)
 		if s.begins_with("Money"):
@@ -422,7 +422,7 @@ func _on_finish() -> void:
 			if m > 0:
 				Economy.add(Economy.Currency.MONEY, m)
 
-	# --- persist and remove human (your existing flow) ---
+	# --- persist and remove human ---
 	var sid := GameDB.id_by_index(current_index)
 	var sname := GameDB.name_by_index(current_index)
 	var contract := {
@@ -434,13 +434,8 @@ func _on_finish() -> void:
 		"acceptance": p
 	}
 	GameDB.add_contract(contract)
-	GameDB.remove_soul_by_index(current_index)
-
 	emit_signal("contract_ready", current_index, offers.duplicate(), asks.duplicate(), clauses.duplicate(), p)
-
-	var ongoing := get_node_or_null("../Ongoing")
-	if ongoing and ongoing.has_method("add_contract_entry"):
-		ongoing.add_contract_entry(sname, offers.duplicate(), asks.duplicate(), clauses.duplicate())
+	GameDB.remove_soul_by_index(current_index)
 
 	reset()
 

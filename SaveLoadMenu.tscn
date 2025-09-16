@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://b2yvynlies7dm"]
+[gd_scene load_steps=3 format=3 uid="uid://b2yvynlies7dm"]
 
 [ext_resource type="Script" uid="uid://cc3ifw6hk0806" path="res://scripts/SaveLoadMenu.gd" id="1_0dkq3"]
+[ext_resource type="PackedScene" uid="uid://boeaw52btmwwk" path="res://ui/SaveSlotRow.tscn" id="2_6vbjc"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -41,7 +42,7 @@ text = "Save / Load"
 [node name="Rows" type="VBoxContainer" parent="CenterContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="RowTemplate" type="HBoxContainer" parent="CenterContainer/PanelContainer/VBoxContainer/Rows"]
+[node name="RowTemplate" parent="CenterContainer/PanelContainer/VBoxContainer/Rows" instance=ExtResource("2_6vbjc")]
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/VBoxContainer"]
@@ -49,3 +50,4 @@ layout_mode = 2
 
 [node name="CloseBtn" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+text = "Close"

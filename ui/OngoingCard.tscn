@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://cpr2nsjyqqhgu"]
+
+[node name="OngoingRow" type="PanelContainer"]
+offset_right = 187.0
+offset_bottom = 50.0
+size_flags_horizontal = 3
+size_flags_vertical = 8
+
+[node name="Pad" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Inner" type="VBoxContainer" parent="Pad"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="Pad/Inner"]
+layout_mode = 2
+text = "Title"
+
+[node name="ProgressRow" type="HBoxContainer" parent="Pad/Inner"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ProgressBar" type="ProgressBar" parent="Pad/Inner/ProgressRow"]
+layout_mode = 2
+show_percentage = false
+
+[node name="Pct" type="Label" parent="Pad/Inner/ProgressRow"]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="Body" type="Label" parent="Pad/Inner"]
+layout_mode = 2
