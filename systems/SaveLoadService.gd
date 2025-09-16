@@ -125,7 +125,8 @@ func _apply_state(d: Dictionary) -> void:
 		var dc: Dictionary = dc_any
 		if dc.has("day"):
 			DayCycle.day = int(dc["day"])
-
+			if DayCycle.has_signal("day_changed"):
+				DayCycle.day_changed.emit(DayCycle.day)
 	# Contract limits
 	var lim_any: Variant = d.get("contract_limits", {})
 	if typeof(lim_any) == TYPE_DICTIONARY:
@@ -165,6 +166,10 @@ func _apply_state(d: Dictionary) -> void:
 			var hired_dict: Dictionary = npcs["hired"] as Dictionary
 			NPCManager.hired = hired_dict
 			_reapply_npc_passives()
+			# wake shop/other UIs that listen to npc_hired
+			if NPCManager.has_signal("npc_hired"):
+				NPCManager.npc_hired.emit("__refresh__")
+
 
 	# Producer
 	var prod_any: Variant = d.get("producer", {})
@@ -194,15 +199,26 @@ func _apply_state(d: Dictionary) -> void:
 	var gdb_any: Variant = d.get("gamedb", {})
 	if typeof(gdb_any) == TYPE_DICTIONARY:
 		var gdb: Dictionary = gdb_any
+
+	# souls: JSON -> Array[Dictionary]
 		if gdb.has("souls"):
-			var souls_val: Variant = gdb["souls"]
-			if typeof(souls_val) == TYPE_ARRAY:
-				GameDB.souls = souls_val
-				if GameDB.has_signal("souls_changed"):
-					GameDB.souls_changed.emit()
-		var og_any: Variant = gdb.get("ongoing_contracts")
-		if og_any != null and GameDB.get("ongoing_contracts") != null:
-			GameDB.ongoing_contracts = og_any
+			var src_souls: Array = gdb["souls"] as Array
+			var souls_typed: Array[Dictionary] = []
+			for it in src_souls:
+				if typeof(it) == TYPE_DICTIONARY:
+					souls_typed.append(it as Dictionary)
+			GameDB.souls = souls_typed
+			if GameDB.has_signal("souls_changed"):
+				GameDB.souls_changed.emit()
+
+	# ongoing_contracts: JSON -> Array[Dictionary]
+		if gdb.has("ongoing_contracts"):
+			var src_oc: Array = gdb["ongoing_contracts"] as Array
+			var oc_typed: Array[Dictionary] = []
+			for it2 in src_oc:
+				if typeof(it2) == TYPE_DICTIONARY:
+					oc_typed.append(it2 as Dictionary)
+			GameDB.ongoing_contracts = oc_typed
 			if GameDB.has_signal("contracts_changed"):
 				GameDB.contracts_changed.emit()
 

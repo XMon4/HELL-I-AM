@@ -20,3 +20,4 @@ func consume_one() -> bool:
 	remaining_today -= 1
 	contracts_count_changed.emit(remaining_today)
 	return true
+	

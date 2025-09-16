@@ -60,7 +60,7 @@ func _on_header() -> void:
 func add_item(label: String, data: Dictionary = {}) -> void:
 	if list == null:
 		return
-	for i in list.item_count:
+	for i in range(list.item_count):  # FIX
 		if list.get_item_text(i) == label:
 			return
 	list.add_item(label)
@@ -85,7 +85,7 @@ func get_labels() -> Array[String]:
 	var out: Array[String] = []
 	if list == null:
 		return out
-	for i in list.item_count:
+	for i in range(list.item_count):  # FIX
 		out.append(list.get_item_text(i))
 	return out
 
@@ -93,6 +93,6 @@ func get_items_meta() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if list == null:
 		return out
-	for i in list.item_count:
+	for i in range(list.item_count):  # FIX
 		out.append(list.get_item_metadata(i))
 	return out

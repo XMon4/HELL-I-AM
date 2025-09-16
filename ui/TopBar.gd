@@ -52,3 +52,9 @@ func _on_menu() -> void:
 		var m := menus[0] as SaveLoadMenu
 		if m != null:
 			m.open_menu()
+	if day_label:
+		if DayCycle.has_signal("day_changed") and not DayCycle.day_changed.is_connected(_on_day):
+			DayCycle.day_changed.connect(_on_day)
+		if not DayCycle.day_advanced.is_connected(_on_day):
+			DayCycle.day_advanced.connect(_on_day)
+		_on_day(DayCycle.day)

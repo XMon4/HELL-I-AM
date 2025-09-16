@@ -38,6 +38,5 @@ size_flags_vertical = 3
 theme_override_constants/separation = 10
 
 [node name="OngoingRow" parent="VBoxContainer/ScrollContainer/VBoxContainer" instance=ExtResource("2_rj6od")]
-visible = false
 layout_mode = 2
-size_flags_horizontal = 1
+size_flags_horizontal = 2

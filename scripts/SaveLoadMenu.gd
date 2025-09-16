@@ -23,9 +23,31 @@ func _ready() -> void:
 	if close_btn:
 		close_btn.pressed.connect(func() -> void: hide())
 
-func _save_service() -> SaveLoadService:
-	return get_node_or_null("/root/SaveLoad") as SaveLoadService
+func _save_service_ok() -> bool:
+	return get_node_or_null("/root/SaveLoad") != null  # FIX
 
+func _on_save_slot(i: int) -> void:
+	if not _save_service_ok():
+		if status_lbl: status_lbl.text = "Save service not found."
+		return
+	var ok := SaveLoad.save_game(SLOT_PATHS[i])  # FIX
+	if status_lbl:
+		status_lbl.text = ( "Saved to %s" if ok else "Save failed for %s" ) % SLOT_PATHS[i]
+	_refresh_row(i)
+
+func _on_load_slot(i: int) -> void:
+	if not _save_service_ok():
+		if status_lbl: status_lbl.text = "Save service not found."
+		return
+	var path := SLOT_PATHS[i]
+	if not FileAccess.file_exists(path):
+		if status_lbl: status_lbl.text = "No save in Slot %d" % (i + 1)
+		return
+	var ok := SaveLoad.load_game(path)  # FIX
+	if status_lbl:
+		status_lbl.text = ( "Loaded from %s" if ok else "Load failed for %s" ) % path
+	if ok: _refresh_all()
+	
 func open_menu() -> void:
 	_refresh_all()
 	show()
@@ -66,32 +88,6 @@ func _build_rows_from_template() -> void:
 
 		rows_box.add_child(row)
 		_rows.append(row)
-
-func _on_save_slot(i: int) -> void:
-	var svc: SaveLoadService = _save_service()
-	if svc == null:
-		if status_lbl: status_lbl.text = "Save service not found."
-		return
-	var path: String = SLOT_PATHS[i]
-	var ok: bool = svc.save_game(path)
-	if status_lbl:
-		status_lbl.text = ("Saved to %s" if ok else "Save failed for %s") % path
-	_refresh_row(i)
-
-func _on_load_slot(i: int) -> void:
-	var svc: SaveLoadService = _save_service()
-	if svc == null:
-		if status_lbl: status_lbl.text = "Save service not found."
-		return
-	var path: String = SLOT_PATHS[i]
-	if not FileAccess.file_exists(path):
-		if status_lbl: status_lbl.text = "No save in Slot %d" % (i + 1)
-		return
-	var ok: bool = svc.load_game(path)
-	if status_lbl:
-		status_lbl.text = ("Loaded from %s" if ok else "Load failed for %s") % path
-	if ok:
-		_refresh_all()
 
 func _on_delete_slot(i: int) -> void:
 	var path: String = SLOT_PATHS[i]
