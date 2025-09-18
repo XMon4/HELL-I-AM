@@ -17,6 +17,10 @@ signal contract_ready(
 @onready var options_title: Label            = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/OptionsTitle
 @onready var options_scroll: ScrollContainer = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll
 @onready var options_box: VBoxContainer      = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox
+@onready var header: HBoxContainer           = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox/Header
+@onready var btn_clauses: Button             = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox/Header/BtnClauses
+@onready var btn_conditions: Button          = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox/Header/BtnConditions
+@onready var list_holder: VBoxContainer      = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox/ListHolder
 @onready var hint_label: Label               = $WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Hint
 
 # FOOTER
@@ -41,8 +45,6 @@ func _ready() -> void:
 	if sec_ask:    sec_ask.section_key    = "ask"
 	if sec_clause: sec_clause.section_key = "clause"
 	_ensure_options_layout()
-
-	# build selected-lists under each section so the player can see & remove picks
 	_make_selected_lists()
 	_refresh_selected_lists()
 
@@ -58,19 +60,23 @@ func _ready() -> void:
 	if not finish_btn.is_connected("pressed", Callable(self, "_on_finish")):
 		finish_btn.pressed.connect(_on_finish)
 
+	# tabs behavior (scene-defined buttons)
+	if not btn_clauses.is_connected("pressed", Callable(self, "_on_btn_clauses")):
+		btn_clauses.pressed.connect(_on_btn_clauses)
+	if not btn_conditions.is_connected("pressed", Callable(self, "_on_btn_conditions")):
+		btn_conditions.pressed.connect(_on_btn_conditions)
+
 	_show_hint("Tap Offer / Ask / Clauses to see options.")
 	_refresh_accept()
 	_validate()
 
-	# --- connect daily limit to button label ---
 	if ContractLimits and not ContractLimits.contracts_count_changed.is_connected(_on_contracts_remaining_changed):
 		ContractLimits.contracts_count_changed.connect(_on_contracts_remaining_changed)
-		_on_contracts_remaining_changed(ContractLimits.remaining_today)  # show current count
+		_on_contracts_remaining_changed(ContractLimits.remaining_today)
 
-	# open an options panel by default
 	call_deferred("_show_options_for", "offer")
 
-# Ensures scroll + box actually occupy space (prevents zero-size collapse)
+# ---- layout helpers ----
 func _ensure_options_layout() -> void:
 	if options_scroll:
 		options_scroll.visible = true
@@ -113,15 +119,12 @@ func _ensure_list_under(section: Control) -> VBoxContainer:
 	return list
 
 func _refresh_selected_lists() -> void:
-	# Offer
 	_clear_children(_offer_list)
 	for t in offers:
 		_offer_list.add_child(_make_selected_row("offer", t))
-	# Ask
 	_clear_children(_ask_list)
 	for t in asks:
 		_ask_list.add_child(_make_selected_row("ask", t))
-	# Clauses
 	_clear_children(_clause_list)
 	for t in clauses:
 		_clause_list.add_child(_make_selected_row("clause", t))
@@ -129,21 +132,16 @@ func _refresh_selected_lists() -> void:
 func _make_selected_row(key: String, label_text: String) -> Control:
 	var hb := HBoxContainer.new()
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
 	var dot := Label.new(); dot.text = "• "
 	var lbl := Label.new(); lbl.text = label_text
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
 	var remove := Button.new()
 	remove.text = "✕ Remove"
 	remove.focus_mode = Control.FOCUS_NONE
 	remove.pressed.connect(func() -> void:
 		_remove_item_from_section(key, label_text)
 	)
-
-	hb.add_child(dot)
-	hb.add_child(lbl)
-	hb.add_child(remove)
+	hb.add_child(dot); hb.add_child(lbl); hb.add_child(remove)
 	return hb
 
 # Called by outer controller
@@ -154,7 +152,6 @@ func set_current_soul(index: int) -> void:
 	_refresh_selected_lists()
 	_refresh_accept(); _validate()
 	_show_hint("Choose a section to view options for this person.")
-	# UX: jump to Ask for the selected human
 	_show_options_for("ask")
 
 func reset() -> void:
@@ -181,14 +178,15 @@ func _on_section_items_changed(key: String, items: Array[String], meta: Array[Di
 	_refresh_accept()
 	_validate()
 	if _current_panel_key != "":
-		_show_options_for(_current_panel_key) # refresh Add/Remove states
+		_show_options_for(_current_panel_key)
 
 func _show_hint(text: String) -> void:
 	options_title.text = "Options"
 	hint_label.visible = true
 	hint_label.text = text
 	options_scroll.visible = false
-	_clear_children(options_box)
+	header.visible = false
+	_clear_children(list_holder)
 
 func _show_options_for(key: String) -> void:
 	var k := key.strip_edges().to_lower()
@@ -197,51 +195,75 @@ func _show_options_for(key: String) -> void:
 		return
 	_current_panel_key = k
 
-	_clear_children(options_box)
+	hint_label.visible = false
+	options_scroll.visible = true
+	_ensure_options_layout()
+	_clear_children(list_holder)
 
 	match k:
 		"offer":
+			header.visible = false
 			options_title.text = "What You Can Offer"
 			for text in GameDB.list_player_offers():
-				options_box.add_child(_make_simple_option_button(text, "offer"))
+				list_holder.add_child(_make_simple_option_button(text, "offer"))
+
 		"ask":
+			header.visible = false
 			options_title.text = "What You Can Ask For"
 			if current_index < 0:
 				_show_hint("Select a human first.")
 				return
 			for text in GameDB.list_soul_asks(GameDB.id_by_index(current_index)):
-				options_box.add_child(_make_simple_option_button(text, "ask"))
-		"clause":
-			options_title.text = "Clauses & Conditions"
-			var catalog: Array[Dictionary] = GameDB.get_clause_catalog()
-			if catalog.is_empty():
-				_show_hint("No options available in the clause catalog.")
-				return
-			for cdef in catalog:
-				var id := String(cdef.get("id",""))
-				if _clause_id_taken(id):
-					options_box.add_child(_wrap_panel(_clause_taken_row(cdef)))
-				else:
-					options_box.add_child(_wrap_panel(_build_clause_widget(cdef)))
+				list_holder.add_child(_make_simple_option_button(text, "ask"))
 
-	hint_label.visible = false
-	options_scroll.visible = true
-	_ensure_options_layout()
+		"clause":
+			header.visible = true
+			options_title.text = "Clauses & Conditions"
+			# default tab = CLAUSES
+			_switch_clause_tab(false)
+
 	options_box.queue_sort()
 	options_scroll.queue_redraw()
 
+# --------- header tab behavior ---------
+func _on_btn_clauses() -> void:
+	_switch_clause_tab(false)
+
+func _on_btn_conditions() -> void:
+	_switch_clause_tab(true)
+
+func _switch_clause_tab(show_conditions: bool) -> void:
+	btn_clauses.button_pressed = not show_conditions
+	btn_conditions.button_pressed = show_conditions
+	_populate_clause_list(show_conditions)
+
+func _populate_clause_list(show_conditions: bool) -> void:
+	_clear_children(list_holder)
+	var cat := "condition" if show_conditions else "clause"
+	var catalog: Array[Dictionary] = GameDB.get_catalog_by_category(cat)
+	if catalog.is_empty():
+		var lbl := Label.new(); lbl.text = "No options available."
+		list_holder.add_child(lbl)
+		return
+
+	for cdef in catalog:
+		var id := String(cdef.get("id",""))
+		if _clause_id_taken(id):
+			list_holder.add_child(_wrap_panel(_clause_taken_row(cdef)))
+		else:
+			list_holder.add_child(_wrap_panel(_build_clause_widget(cdef)))
+
+# ---------- add buttons ----------
 func _make_simple_option_button(text: String, key: String) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Disable if already selected; enabled again after you remove from parchment
-	if _is_selected(key, text):
-		b.disabled = true
+	if _is_selected(key, text): b.disabled = true
 	b.pressed.connect(func() -> void:
 		match key:
 			"offer":  sec_offer.add_item(text)
 			"ask":    sec_ask.add_item(text)
-		b.disabled = true   # immediate feedback; items_changed will also refresh UI
+		b.disabled = true
 	)
 	return b
 
@@ -328,18 +350,15 @@ func _clause_taken_row(cdef: Dictionary) -> Control:
 	return vb
 
 func _remove_clause_by_id(id: String) -> void:
-	# rebuild the clause section without the given id
 	var new_meta: Array[Dictionary] = []
 	for m in clause_meta:
 		if String(m.get("id","")) != id:
 			new_meta.append(m)
-	# clear then re-add
 	if sec_clause and sec_clause.has_method("set_items"):
 		var empty: Array[Dictionary] = []
 		sec_clause.set_items(empty)
 	for m in new_meta:
 		sec_clause.add_item(String(m.get("label","Clause")), m)
-	# items_changed will sync arrays & refresh UI
 
 func _clause_id_taken(id: String) -> bool:
 	for m in clause_meta:
@@ -376,7 +395,7 @@ func _refresh_accept() -> void:
 	var p: float = ContractManager.evaluate(offers.duplicate(), asks.duplicate(), clauses.duplicate(), traits)
 	bar.value = int(round(p * 100.0))
 	bar.tooltip_text = "%d%%" % int(bar.value)
-	
+
 func _on_contracts_remaining_changed(remaining: int) -> void:
 	if finish_btn:
 		finish_btn.text = "Finish (%d left today)" % int(remaining)
@@ -395,7 +414,6 @@ func _validate() -> void:
 		finish_btn.disabled = not ok
 
 func _on_finish() -> void:
-	# daily limit gate
 	if ContractLimits and not ContractLimits.consume_one():
 		_show_hint("You've reached today's contract limit. Press Next Day.")
 		_validate()
@@ -404,7 +422,6 @@ func _on_finish() -> void:
 	var p: float = float(bar.value) / 100.0
 
 	# --- ECONOMY EFFECTS ---
-	# Deduct offered Money
 	for o in offers:
 		var s := String(o)
 		if s.begins_with("Money"):
@@ -412,7 +429,6 @@ func _on_finish() -> void:
 			if n > 0:
 				Economy.add(Economy.Currency.MONEY, -n)
 
-	# Grant asked resources
 	for a in asks:
 		var s2 := String(a)
 		if s2.begins_with("Soul"):
@@ -422,7 +438,6 @@ func _on_finish() -> void:
 			if m > 0:
 				Economy.add(Economy.Currency.MONEY, m)
 
-	# --- persist and remove human ---
 	var sid := GameDB.id_by_index(current_index)
 	var sname := GameDB.name_by_index(current_index)
 	var contract := {
@@ -448,7 +463,6 @@ func _reset_sections() -> void:
 		if s == null:
 			continue
 		if s.has_method("set_items"):
-			# IMPORTANT: pass a *typed* empty array to match ContractSection.set_items(Array[Dictionary])
 			var empty: Array[Dictionary] = []
 			s.set_items(empty)
 		elif s.has_method("clear"):
@@ -459,11 +473,9 @@ func _clear_children(node: Node) -> void:
 	for c in node.get_children():
 		c.queue_free()
 
-# remove from parchment (Offer/Ask/Clause)
 func _remove_item_from_section(key: String, label: String) -> void:
 	match key:
 		"offer":
-			# rebuild the offer section without this label
 			var keep: Array[String] = []
 			for t in offers:
 				if t != label:
@@ -486,7 +498,6 @@ func _remove_item_from_section(key: String, label: String) -> void:
 				sec_ask.add_item(t2)
 
 		"clause":
-			# find by label in meta and rebuild
 			var keep_meta: Array[Dictionary] = []
 			for m in clause_meta:
 				if String(m.get("label","")) != label:
@@ -497,13 +508,10 @@ func _remove_item_from_section(key: String, label: String) -> void:
 			for m in keep_meta:
 				sec_clause.add_item(String(m.get("label","Clause")), m)
 
-	# items_changed will sync arrays, refresh lists, and re-enable options
-	
-	# Wrap widgets in a styled panel so they don't collapse and look consistent
+# wrap child in a styled panel
 func _wrap_panel(child: Control) -> Control:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.10, 0.10, 0.10, 0.85)
 	sb.corner_radius_top_left = 10
@@ -519,21 +527,18 @@ func _wrap_panel(child: Control) -> Control:
 	sb.content_margin_right = 6
 	sb.content_margin_top = 4
 	sb.content_margin_bottom = 6
-
 	panel.add_theme_stylebox_override("panel", sb)
 	panel.add_child(child)
 	return panel
-	
+
 func _extract_int(text: String) -> int:
 	var digits := ""
 	var n := text.length()
 	for i in range(n):
-		# use substr to ensure a 1-char String
 		var ch := text.substr(i, 1)
 		if ch >= "0" and ch <= "9":
 			digits += ch
 		elif digits != "":
-			# stop at first non-digit after we've started collecting
 			break
 	if digits == "":
 		return 0

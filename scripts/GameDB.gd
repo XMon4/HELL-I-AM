@@ -15,26 +15,98 @@ var player := player_inventory  # legacy alias
 # ----- souls (PUBLIC, used by main.gd and panels) -----
 var souls: Array[Dictionary] = []  # [{id,name,inv,traits}...]
 
-# ----- clause & condition catalog -----
+# ----- clause & condition catalog (SOURCE OF TRUTH) -----
+const CAT_CLAUSE    := "clause"
+const CAT_CONDITION := "condition"
 const _VAR_CHOICES := ["VOID (+40 trust)", "SOUL (+40 suspicion)"]
 
+# original list here. normalize below.
 var clause_catalog: Array[Dictionary] = [
 	{"id":"tithe_percent","label":"Satan will charge a percentage of the human's earnings","ui":"percent","min":10,"max":100,"step":10},
 	{"id":"no_returns","label":"If the signer wants to return the Item, Satan will not return his","ui":"button"},
 	{"id":"maintenance_evil_act","label":"The human must commit one act of evil every","ui":"choice","choices":["Day","Week","Month"]},
+
 	{"id":"death_void","label":"If the human dies before this contract is completed — The contract is void (+40 trust)","ui":"button"},
 	{"id":"death_soul","label":"If the human dies before this contract is completed — Satan takes their soul (+40 suspicion)","ui":"button"},
+
 	{"id":"cond_revenge_renounce","label":"Cond: Revenge — renounces revenge","ui":"choice","choices":_VAR_CHOICES},
 	{"id":"cond_revenge_no_take","label":"Cond: Revenge — does not take revenge","ui":"choice","choices":_VAR_CHOICES},
+
 	{"id":"cond_love_finds","label":"Cond: Love — finds true love","ui":"choice","choices":_VAR_CHOICES},
 	{"id":"cond_love_not_find","label":"Cond: Love — doesn't find true love","ui":"choice","choices":_VAR_CHOICES},
 	{"id":"cond_love_let_go","label":"Cond: Love — lets go true love — SOUL (+40 suspicion)","ui":"button"},
+
 	{"id":"cond_happiness_object_ceases","label":"Cond: Happiness — object ceases to provide happiness","ui":"choice","choices":_VAR_CHOICES},
+
 	{"id":"cond_money_not_received_1m","label":"Cond: Money — not received in 1 month — VOID (+40 trust)","ui":"button"},
 	{"id":"cond_fame_not_famous_1m","label":"Cond: Fame — isn't famous within 1 month — VOID (+40 trust)","ui":"button"},
 	{"id":"cond_fame_wants_to_stop","label":"Cond: Fame — wants to stop being famous","ui":"choice","choices":_VAR_CHOICES},
-	{"id":"cond_lust_falls_in_love","label":"Cond: Lust — falls in love","ui":"choice","choices":_VAR_CHOICES},
+
+	{"id":"cond_lust_falls_in_love","label":"Cond: Lust — falls in love","ui":"choice","choices":_VAR_CHOICES}
 ]
+
+# Known condition IDs so we don't rely only on name heuristics.
+const _KNOWN_CONDITION_IDS := {
+	"death_void": true,
+	"death_soul": true,
+
+	"cond_revenge_renounce": true,
+	"cond_revenge_no_take": true,
+
+	"cond_love_finds": true,
+	"cond_love_not_find": true,
+	"cond_love_let_go": true,
+
+	"cond_happiness_object_ceases": true,
+
+	"cond_money_not_received_1m": true,
+	"cond_fame_not_famous_1m": true,
+	"cond_fame_wants_to_stop": true,
+
+	"cond_lust_falls_in_love": true
+}
+
+func _is_condition_id(idl: String, label: String) -> bool:
+	idl = idl.to_lower()
+	var lab := label.to_lower()
+	if _KNOWN_CONDITION_IDS.has(idl): return true
+	# Conservative heuristics for any future entries
+	if idl.begins_with("cond_"): return true
+	if lab.begins_with("cond:"): return true
+	if idl.begins_with("death_"): return true
+	if lab.find("— void") != -1 or lab.find("— soul") != -1: return true
+	return false
+
+# Normalizes the source catalog by injecting "category": "clause"|"condition"
+func _normalized_catalog() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for c in clause_catalog:
+		var d := c.duplicate(true)
+		var id := String(d.get("id",""))
+		var label := String(d.get("label",""))
+		if not d.has("category"):
+			d["category"] = CAT_CONDITION if _is_condition_id(id, label) else CAT_CLAUSE
+		out.append(d)
+	return out
+
+# === PUBLIC API used by UI ===
+func get_clause_catalog() -> Array[Dictionary]:
+	# Return ALL entries with category field included (backward-compatible name)
+	return _normalized_catalog()
+
+func get_catalog_by_category(cat: String) -> Array[Dictionary]:
+	var want := cat.to_lower()
+	var out: Array[Dictionary] = []
+	for d in _normalized_catalog():
+		if String(d.get("category", CAT_CLAUSE)).to_lower() == want:
+			out.append(d)
+	return out
+
+func get_clauses_only() -> Array[Dictionary]:
+	return get_catalog_by_category(CAT_CLAUSE)
+
+func get_conditions_only() -> Array[Dictionary]:
+	return get_catalog_by_category(CAT_CONDITION)
 
 # ----- ongoing contracts -----
 var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,clauses,acceptance}]
@@ -105,10 +177,8 @@ func list_player_offers() -> Array[String]:
 		have_fame = (fv == true)
 
 	if have_fame:
-		# Local is always available when Fame is owned
 		out.append("Fame (Local)")
 
-		# National only if Producer power allows it
 		var can_national := false
 		if ProducerSystem and ProducerSystem.has_method("can_offer_fame_tier"):
 			can_national = ProducerSystem.can_offer_fame_tier("National")
@@ -116,7 +186,6 @@ func list_player_offers() -> Array[String]:
 			out.append("Fame (National)")
 
 	return out
-
 
 func list_soul_asks(soul_id: String) -> Array[String]:
 	var s := _find_soul(soul_id)
@@ -132,9 +201,6 @@ func list_soul_asks(soul_id: String) -> Array[String]:
 		else:
 			out.append(k)
 	return out
-
-func get_clause_catalog() -> Array[Dictionary]:
-	return clause_catalog
 
 # ====== utilities ======
 func index_count() -> int:

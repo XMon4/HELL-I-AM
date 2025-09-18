@@ -131,6 +131,28 @@ horizontal_scroll_mode = 0
 [node name="OptionsBox" type="VBoxContainer" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll"]
 layout_mode = 2
 
+[node name="Header" type="HBoxContainer" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox"]
+layout_mode = 2
+theme_override_constants/separation = 100
+
+[node name="BtnClauses" type="Button" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+text = "CLAUSES"
+flat = true
+
+[node name="BtnConditions" type="Button" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "CONDITIONS"
+flat = true
+
+[node name="ListHolder" type="VBoxContainer" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer/Scroll/OptionsBox"]
+layout_mode = 2
+
 [node name="Hint" type="Label" parent="WB_VBox/WB_Rows/OptionsPanel/VBoxContainer"]
 layout_mode = 2
 text = "Click Offer / Ask / Clause to see options."

@@ -4,7 +4,7 @@ var next_btn: Button
 var money_label: Label
 var ore_label: Label
 var souls_label: Label
-var day_label: Label   # optional: remove if you don’t have a DayLabel node
+var day_label: Label   
 var menu_btn: Button
 
 func _ready() -> void:
