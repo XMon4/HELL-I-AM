@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://ctsmkdkwceana"]
+[gd_scene load_steps=14 format=3 uid="uid://ctsmkdkwceana"]
 
 [ext_resource type="Script" uid="uid://d1lbpd0jwt2wv" path="res://scripts/main.gd" id="1_glv2v"]
 [ext_resource type="Script" uid="uid://b87q6xsdnxpyv" path="res://ui/TopBar.gd" id="2_03owx"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://clgnqer6fqhds" path="res://ui/MinesPanel.tscn" id="10_wkp8b"]
 [ext_resource type="PackedScene" uid="uid://xqvabfmpocj1" path="res://ui/CasinoPanel.tscn" id="11_5vvyt"]
 [ext_resource type="PackedScene" uid="uid://yybk5ubse0pf" path="res://ui/NPCShopPanel.tscn" id="12_5vvyt"]
+[ext_resource type="PackedScene" uid="uid://ckmagu8vnvgb" path="res://NPCs/ProfileOverlay .tscn" id="12_c2ibq"]
 [ext_resource type="PackedScene" uid="uid://b2yvynlies7dm" path="res://SaveLoadMenu.tscn" id="12_c6i3y"]
 
 [node name="Control" type="Control"]
@@ -93,6 +94,7 @@ layout_mode = 2
 z_index = 1
 layout_mode = 2
 script = ExtResource("2_r0du0")
+profile_overlay_path = NodePath("../../../ProfileOverlay")
 
 [node name="Label" type="Label" parent="MarginContainer/HSplitContainer/LeftPane"]
 layout_mode = 2
@@ -145,3 +147,5 @@ metadata/_tab_index = 6
 
 [node name="Control" parent="MenusLayer" instance=ExtResource("12_c6i3y")]
 visible = false
+
+[node name="ProfileOverlay" parent="." instance=ExtResource("12_c2ibq")]
