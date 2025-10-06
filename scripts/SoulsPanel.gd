@@ -85,13 +85,10 @@ func _make_btn_cb(index: int) -> Callable:
 		_open_profile_or_emit(index)
 
 func _open_profile_or_emit(index: int) -> void:
-	print("[SoulsPanel] picked index:", index)
 	if _profile and _profile.has_method("start_for"):
 		_profile.call("start_for", index)
 	else:
-		print("[SoulsPanel] no overlay; emitting soul_selected")
 		emit_signal("soul_selected", index)
-
 
 func _on_new_clicked() -> void:
 	var idx := GameDB.index_count()

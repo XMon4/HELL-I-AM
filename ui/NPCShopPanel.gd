@@ -45,9 +45,6 @@ func _build_rows() -> void:
 	_make_row("asmodea",  "Asmodea — +50% casino income",                                  cost_asmodea)
 	_make_row("jackie",   "Jackie — increases Producer power (unlock National)",           cost_jackie)
 
-	# Debug aid: print how many rows we actually have
-	print("NPCShopPanel: built rows -> ", rows.get_child_count())
-
 func _make_row(id: String, desc: String, cost: CostBundle) -> void:
 	var row: Control = _instantiate_row()
 	row.visible = true
