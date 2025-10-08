@@ -13,7 +13,9 @@ var player_inventory := {
 var player := player_inventory  # legacy alias
 
 # ----- souls (PUBLIC, used by main.gd and panels) -----
-var souls: Array[Dictionary] = []  # [{id,name,inv,traits}...]
+# Each soul now may include:
+# id, name, portrait (path), desire (string), inv (Dictionary), traits (Dictionary), skills (Array)
+var souls: Array[Dictionary] = []
 
 # ----- clause & condition catalog (SOURCE OF TRUTH) -----
 const CAT_CLAUSE    := "clause"
@@ -44,6 +46,13 @@ var clause_catalog: Array[Dictionary] = [
 
 	{"id":"cond_lust_falls_in_love","label":"Cond: Lust — falls in love","ui":"choice","choices":_VAR_CHOICES}
 ]
+
+# Legacy name->portrait fallback (kept for compatibility; profiles now carry 'portrait')
+var _portrait_paths := {
+	"andrew": "res://art/Andrew.png",
+	"vixy":          "res://art/Vixy.png",
+	"cecylia":       "res://art/Cecylia.png",
+}
 
 # Known condition IDs so we don't rely only on name heuristics.
 const _KNOWN_CONDITION_IDS := {
@@ -108,6 +117,48 @@ func get_clauses_only() -> Array[Dictionary]:
 func get_conditions_only() -> Array[Dictionary]:
 	return get_catalog_by_category(CAT_CONDITION)
 
+# ---------- NPC profile helpers ----------
+var _portrait_cache: Dictionary = {}
+
+func add_soul_profile(p: Dictionary) -> void:
+	# Minimal normalized record (keeps backward compat with existing UI)
+	var s := {
+		"id":      p.get("id",""),
+		"name":    p.get("name",""),
+		"portrait":p.get("portrait",""),   # new
+		"desire":  p.get("desire",""),     # new
+		"inv":     p.get("inv", {}),       # inventory / asks
+		"traits":  p.get("traits", {}),    # used by acceptance later
+		"skills":  p.get("skills", [])     # optional
+	}
+	souls.append(s)
+
+func get_desire_for_index(i: int) -> String:
+	if i < 0 or i >= souls.size(): return ""
+	return String(souls[i].get("desire",""))
+
+func get_portrait_path_by_index(i: int) -> String:
+	if i < 0 or i >= souls.size():
+		return ""
+	# Prefer explicit 'portrait' on the soul; fallback to legacy map
+	var portrait := String(souls[i].get("portrait",""))
+	if portrait != "":
+		return portrait
+	var nm := String(souls[i].get("name","")).to_lower()
+	return String(_portrait_paths.get(nm, ""))
+
+func get_portrait_tex_by_index(i: int) -> Texture2D:
+	var path := get_portrait_path_by_index(i)
+	if path == "":
+		return null
+	if _portrait_cache.has(path):
+		return _portrait_cache[path]
+	var res := ResourceLoader.load(path)
+	if res is Texture2D:
+		_portrait_cache[path] = res
+		return res
+	return null
+
 # ----- ongoing contracts -----
 var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,clauses,acceptance}]
 
@@ -134,21 +185,44 @@ func remove_soul_by_index(i: int) -> void:
 func is_empty() -> bool:
 	return souls.is_empty()
 
-func seed_if_empty(count: int = 7) -> void:
+# Replace dummy generator with real profiles
+func seed_if_empty(count: int = 0) -> void:
 	if not souls.is_empty():
 		return
-	for i in range(count):
-		var inv := {"Soul": true, "Body": true, "Years of life": 12 + i}
-		if (i % 2) == 0:
-			inv["Musical skill"] = true
-		if (i % 3) == 0:
-			inv["Money"] = 10000 + i * 777
-		souls.append({
-			"id": "s_%d" % (i + 1),
-			"name": "Human %d" % (i + 1),
-			"inv": inv,
-			"traits": {"morality": "neutral", "fear": 0.2, "greed": 0.5}
-		})
+
+	# --- Andrew ---
+	add_soul_profile({
+		"id":"s_andrew",
+		"name":"Andrew",
+		"portrait":"res://art/Andrew.png",
+		"desire":"fame",
+		"inv": {"Soul": true, "Body": true, "Money": 1200, "Guitar Player (Bronze)": true},
+		"traits": {"morality": 30, "cowardice": 20, "charm": "bronze"},
+		"skills": ["Guitar Player (Bronze)"]
+	})
+
+	# --- Vixy ---
+	add_soul_profile({
+		"id":"s_vixy",
+		"name":"Vixy",
+		"portrait":"res://art/Vixy.png",
+		"desire":"revenge",
+		"inv": {"Soul": true, "Body": true, "Money": 800, "Tactician (Bronze)": true},
+		"traits": {"morality": -30, "cowardice": 5, "intelligence": "bronze"},
+		"skills": ["Tactician (Bronze)"]
+	})
+
+	# --- Cecylia ---
+	add_soul_profile({
+		"id":"s_cecylia",
+		"name":"Cecylia",
+		"portrait":"res://art/Cecylia.png",
+		"desire":"happiness",
+		"inv": {"Soul": true, "Body": true, "Money": 2500, "Business mental (Bronze)": true},
+		"traits": {"morality": -20, "cowardice": 20, "seduction": "bronze"},
+		"skills": ["Business mental (Bronze)"]
+	})
+
 	emit_signal("souls_changed")
 
 # ====== queries used by UI ======
@@ -196,7 +270,11 @@ func list_soul_asks(soul_id: String) -> Array[String]:
 	for k in inv.keys():
 		var v = inv[k]
 		if v is int:
-			var val_text := "$%d" % int(v) if k == "Money" else str(v)
+			var val_text := ""
+			if k == "Money":
+				val_text = "$%d" % int(v)
+			else:
+				val_text = str(v)
 			out.append("%s: %s" % [k, val_text])
 		else:
 			out.append(k)

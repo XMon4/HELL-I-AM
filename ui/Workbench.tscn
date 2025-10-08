@@ -1,7 +1,6 @@
-[gd_scene load_steps=9 format=3 uid="uid://bkmc758a3qkjn"]
+[gd_scene load_steps=8 format=3 uid="uid://bkmc758a3qkjn"]
 
 [ext_resource type="Script" uid="uid://cfxwulywccjpv" path="res://scripts/Workbench.gd" id="1_ogq0w"]
-[ext_resource type="Texture2D" uid="uid://di3mtpkqwwdom" path="res://art/Char.png" id="2_wct73"]
 [ext_resource type="Texture2D" uid="uid://jx1k34i0uaxx" path="res://art/Contract.png" id="3_nelf4"]
 [ext_resource type="Script" uid="uid://bm5ltoj3nnbcd" path="res://scripts/ContractSection.gd" id="4_juv10"]
 [ext_resource type="Texture2D" uid="uid://cix82pbq1ibea" path="res://art/box.png" id="5_2kcg2"]
@@ -20,32 +19,25 @@ texture = ExtResource("5_2kcg2")
 
 [node name="Workbench" type="Control"]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_ogq0w")
 metadata/_tab_index = 0
 
-[node name="CharTex" type="TextureRect" parent="."]
-z_index = -5
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -915.0
-offset_top = 187.0
-offset_right = -505.0
-offset_bottom = 809.0
-grow_horizontal = 0
-size_flags_horizontal = 3
-mouse_filter = 2
-texture = ExtResource("2_wct73")
-stretch_mode = 4
-
 [node name="WB_VBox" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -0.492035
-offset_top = -16.8702
-offset_right = 1804.51
-offset_bottom = 1556.13
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 282.0
+offset_top = 84.0
+offset_right = 282.0
+offset_bottom = 84.0
+grow_horizontal = 2
+grow_vertical = 2
 scale = Vector2(0.587462, 0.784159)
 
 [node name="WB_Rows" type="HSplitContainer" parent="WB_VBox"]

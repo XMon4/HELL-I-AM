@@ -13,7 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://yybk5ubse0pf" path="res://ui/NPCShopPanel.tscn" id="12_5vvyt"]
 [ext_resource type="PackedScene" uid="uid://ckmagu8vnvgb" path="res://NPCs/ProfileOverlay .tscn" id="12_c2ibq"]
 [ext_resource type="PackedScene" uid="uid://b2yvynlies7dm" path="res://SaveLoadMenu.tscn" id="12_c6i3y"]
-[ext_resource type="Script" uid="uid://bqxkapdc3hj1k" path="res://NPCs/DialogueOverlay.gd" id="14_c2ibq"]
+[ext_resource type="PackedScene" uid="uid://ydtbdhd4t8q2" path="res://NPCs/DialogueOverlay.tscn" id="14_c2ibq"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -151,5 +151,4 @@ visible = false
 
 [node name="ProfileOverlay" parent="." instance=ExtResource("12_c2ibq")]
 
-[node name="DialogueOverlay" type="CanvasLayer" parent="."]
-script = ExtResource("14_c2ibq")
+[node name="DialogueOverlay" parent="." instance=ExtResource("14_c2ibq")]

@@ -1,0 +1,90 @@
+[gd_scene load_steps=2 format=3 uid="uid://ydtbdhd4t8q2"]
+
+[ext_resource type="Script" uid="uid://bqxkapdc3hj1k" path="res://NPCs/DialogueOverlay.gd" id="1_n0whu"]
+
+[node name="DialogueOverlay" type="CanvasLayer"]
+script = ExtResource("1_n0whu")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Avatar" type="TextureRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+stretch_mode = 5
+
+[node name="ChoiceBox" type="VBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 260.0
+offset_top = -410.0
+offset_right = -260.0
+offset_bottom = -300.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BtnSuggest" type="Button" parent="Control/ChoiceBox"]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.998321, 0.38423, 0.322787, 1)
+theme_override_colors/font_color = Color(0.972549, 0.0392157, 0.054902, 1)
+theme_override_font_sizes/font_size = 48
+text = "Something else"
+
+[node name="BtnAgree" type="Button" parent="Control/ChoiceBox"]
+layout_mode = 2
+theme_override_colors/icon_hover_color = Color(1, 0.384314, 0.321569, 1)
+theme_override_colors/font_color = Color(0.972549, 0.0392157, 0.054902, 1)
+theme_override_font_sizes/font_size = 48
+text = "Agree"
+
+[node name="Ribbon" type="Panel" parent="Control"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 140.0
+offset_top = -220.0
+offset_right = -140.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="VBox" type="VBoxContainer" parent="Control/Ribbon"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="HumanLine" type="Label" parent="Control/Ribbon/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.603922, 0.0980392, 0.34902, 1)
+theme_override_font_sizes/font_size = 48
+
+[node name="ReplyLine" type="Label" parent="Control/Ribbon/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.603922, 0.0980392, 0.34902, 1)
+theme_override_font_sizes/font_size = 48
+
+[node name="StartBtn" type="Button" parent="Control/Ribbon/VBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 30
+text = "Start Contract"
