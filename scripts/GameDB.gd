@@ -22,13 +22,12 @@ func get_equipped_traits() -> Array[String]:
 	return equipped_traits.duplicate()
 
 func add_souls(n:int) -> void:
-	souls_currency = max(0, souls_currency + n)
-	emit_signal("inventory_changed")
+	Economy.add(Economy.Currency.SOULS, n)
 
 func spend_souls(n:int) -> bool:
-	if souls_currency >= n:
-		souls_currency -= n
-		emit_signal("inventory_changed")
+	var have := Economy.get_balance(Economy.Currency.SOULS)
+	if have >= n:
+		Economy.add(Economy.Currency.SOULS, -n)
 		return true
 	return false
 
@@ -216,9 +215,19 @@ var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,cla
 
 func _ready() -> void:
 	seed_if_empty()
+	# Bridge Economy → UI
+	if Economy and not Economy.balance_changed.is_connected(_on_bal):
+		Economy.balance_changed.connect(_on_bal)
+	# initialize mirror
+	souls_currency = Economy.get_balance(Economy.Currency.SOULS)
 	emit_signal("souls_changed")
 	emit_signal("contracts_changed")
-
+	emit_signal("inventory_changed")
+	
+func _on_bal(currency: int, _value: int) -> void:
+	if currency == Economy.Currency.SOULS:
+		souls_currency = Economy.get_balance(Economy.Currency.SOULS)
+		inventory_changed.emit()
 # ====== contracts ======
 func add_contract(c: Dictionary) -> void:
 	ongoing_contracts.append(c)
@@ -317,16 +326,12 @@ func list_soul_asks(soul_id: String) -> Array[String]:
 	var s := _find_soul(soul_id)
 	if s.is_empty():
 		return []
-	var inv: Dictionary = s.inv
+	var inv: Dictionary = s.get("inv", {})
 	var out: Array[String] = []
 	for k in inv.keys():
 		var v = inv[k]
 		if v is int:
-			var val_text := ""
-			if k == "Money":
-				val_text = "$%d" % int(v)
-			else:
-				val_text = str(v)
+			var val_text := ( "$%d" % int(v) ) if k == "Money" else str(v)
 			out.append("%s: %s" % [k, val_text])
 		else:
 			out.append(k)
@@ -338,21 +343,21 @@ func index_count() -> int:
 
 func id_by_index(i: int) -> String:
 	if i >= 0 and i < souls.size():
-		return String(souls[i].id)
+		return String(souls[i].get("id",""))
 	return ""
 
 func name_by_index(i: int) -> String:
 	if i >= 0 and i < souls.size():
-		return String(souls[i].name)
+		return String(souls[i].get("name",""))
 	return ""
 
 func traits_by_index(i: int) -> Dictionary:
 	if i >= 0 and i < souls.size():
-		return souls[i].traits
+		return souls[i].get("traits", {})
 	return {}
 
 func _find_soul(id: String) -> Dictionary:
 	for s in souls:
-		if String(s.id) == id:
+		if String(s.get("id","")) == id:
 			return s
 	return {}

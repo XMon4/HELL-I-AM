@@ -432,7 +432,7 @@ func _on_finish() -> void:
 	for a in asks:
 		var s2 := String(a)
 		if s2.begins_with("Soul"):
-			Economy.add(Economy.Currency.SOULS, 1)
+			GameDB.add_souls(1)     
 		elif s2.begins_with("Money"):
 			var m := _extract_int(s2)
 			if m > 0:

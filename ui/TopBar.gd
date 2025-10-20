@@ -23,8 +23,10 @@ func _ready() -> void:
 	_refresh_labels()
 	if not Economy.balance_changed.is_connected(_on_bal):
 		Economy.balance_changed.connect(_on_bal)
+	if GameDB and not GameDB.inventory_changed.is_connected(_refresh_labels):
+		GameDB.inventory_changed.connect(_refresh_labels)
 
-	# (Optional) show Day if you have DayLabel
+	# show Day - DayLabel
 	if day_label:
 		if not DayCycle.day_advanced.is_connected(_on_day):
 			DayCycle.day_advanced.connect(_on_day)

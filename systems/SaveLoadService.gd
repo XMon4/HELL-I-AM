@@ -21,6 +21,7 @@ func save_game(path: String = DEFAULT_PATH) -> bool:
 	game_saved.emit(path)
 	return true
 
+
 func load_game(path: String = DEFAULT_PATH) -> bool:
 	if not FileAccess.file_exists(path):
 		push_warning("SaveLoad: file does not exist: " + path)
@@ -52,6 +53,7 @@ func load_game(path: String = DEFAULT_PATH) -> bool:
 	_apply_state(state)
 	game_loaded.emit(state)
 	return true
+
 
 # ---------- snapshot ----------
 func _collect_state() -> Dictionary:
@@ -106,16 +108,22 @@ func _collect_state() -> Dictionary:
 		cur["count"] = 0
 	d["curses"] = cur
 
-	# GameDB (souls + optional ongoing)
+	# GameDB (souls + inventory/store + ongoing)
 	var gdb: Dictionary = {}
-	gdb["souls"] = GameDB.souls  # Array[Dictionary]; keep structure as-is
+	gdb["souls"]           = GameDB.souls
+	gdb["souls_currency"]  = int(GameDB.souls_currency)   # mirror (Economy is canonical)
+	gdb["max_trait_slots"] = int(GameDB.max_trait_slots)
+	gdb["traits_owned"]    = GameDB.traits_owned
+	gdb["skills_owned"]    = GameDB.skills_owned
+	gdb["equipped_traits"] = GameDB.equipped_traits
 
 	var ongoing_any: Variant = GameDB.get("ongoing_contracts")
 	if ongoing_any != null:
 		gdb["ongoing_contracts"] = ongoing_any
 	d["gamedb"] = gdb
-	
+
 	return d
+
 
 # ---------- restore ----------
 func _apply_state(d: Dictionary) -> void:
@@ -127,6 +135,7 @@ func _apply_state(d: Dictionary) -> void:
 			DayCycle.day = int(dc["day"])
 			if DayCycle.has_signal("day_changed"):
 				DayCycle.day_changed.emit(DayCycle.day)
+
 	# Contract limits
 	var lim_any: Variant = d.get("contract_limits", {})
 	if typeof(lim_any) == TYPE_DICTIONARY:
@@ -136,9 +145,12 @@ func _apply_state(d: Dictionary) -> void:
 	var eco_any: Variant = d.get("economy", {})
 	if typeof(eco_any) == TYPE_DICTIONARY:
 		var eco: Dictionary = eco_any
-		if eco.has("money"): Economy.set_balance(Economy.Currency.MONEY, int(eco["money"]))
-		if eco.has("ore"):   Economy.set_balance(Economy.Currency.ORE,   int(eco["ore"]))
-		if eco.has("souls"): Economy.set_balance(Economy.Currency.SOULS, int(eco["souls"]))
+		if eco.has("money"):
+			Economy.set_balance(Economy.Currency.MONEY, int(eco["money"]))
+		if eco.has("ore"):
+			Economy.set_balance(Economy.Currency.ORE,   int(eco["ore"]))
+		if eco.has("souls"):
+			Economy.set_balance(Economy.Currency.SOULS, int(eco["souls"]))
 
 	# Mines
 	var mines_any: Variant = d.get("mines", {})
@@ -170,7 +182,6 @@ func _apply_state(d: Dictionary) -> void:
 			if NPCManager.has_signal("npc_hired"):
 				NPCManager.npc_hired.emit("__refresh__")
 
-
 	# Producer
 	var prod_any: Variant = d.get("producer", {})
 	if typeof(prod_any) == TYPE_DICTIONARY:
@@ -200,7 +211,7 @@ func _apply_state(d: Dictionary) -> void:
 	if typeof(gdb_any) == TYPE_DICTIONARY:
 		var gdb: Dictionary = gdb_any
 
-	# souls: JSON -> Array[Dictionary]
+		# souls: JSON -> Array[Dictionary]
 		if gdb.has("souls"):
 			var src_souls: Array = gdb["souls"] as Array
 			var souls_typed: Array[Dictionary] = []
@@ -211,7 +222,17 @@ func _apply_state(d: Dictionary) -> void:
 			if GameDB.has_signal("souls_changed"):
 				GameDB.souls_changed.emit()
 
-	# ongoing_contracts: JSON -> Array[Dictionary]
+		# Inventory/Store state
+		if gdb.has("max_trait_slots"):
+			GameDB.max_trait_slots = int(gdb["max_trait_slots"])
+		if gdb.has("traits_owned"):
+			GameDB.traits_owned = gdb["traits_owned"] as Dictionary
+		if gdb.has("skills_owned"):
+			GameDB.skills_owned = gdb["skills_owned"] as Dictionary
+		if gdb.has("equipped_traits"):
+			GameDB.equipped_traits = gdb["equipped_traits"] as Array
+
+		# ongoing_contracts: JSON -> Array[Dictionary]
 		if gdb.has("ongoing_contracts"):
 			var src_oc: Array = gdb["ongoing_contracts"] as Array
 			var oc_typed: Array[Dictionary] = []
@@ -221,6 +242,12 @@ func _apply_state(d: Dictionary) -> void:
 			GameDB.ongoing_contracts = oc_typed
 			if GameDB.has_signal("contracts_changed"):
 				GameDB.contracts_changed.emit()
+
+	# Sync the UI mirror of Souls to Economy (Economy is canonical)
+	GameDB.souls_currency = Economy.get_balance(Economy.Currency.SOULS)
+	if GameDB.has_signal("inventory_changed"):
+		GameDB.inventory_changed.emit()
+
 
 # ---------- helpers ----------
 func _snapshot_contract_limits() -> Dictionary:
@@ -236,6 +263,7 @@ func _snapshot_contract_limits() -> Dictionary:
 		if rem2_any != null:
 			out["remaining"] = int(rem2_any)
 	return out
+
 
 func _restore_contract_limits(src_any: Variant) -> void:
 	if typeof(src_any) != TYPE_DICTIONARY:
@@ -257,6 +285,7 @@ func _restore_contract_limits(src_any: Variant) -> void:
 	# notify UI
 	if ContractLimits.has_signal("contracts_count_changed"):
 		ContractLimits.contracts_count_changed.emit(rem)
+
 
 func _reapply_npc_passives() -> void:
 	if NPCManager.is_hired("taura"):
