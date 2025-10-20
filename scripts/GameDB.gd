@@ -3,19 +3,71 @@ extends Node
 
 signal souls_changed
 signal contracts_changed
+signal inventory_changed
 
 # ----- player inventory -----
 var player_inventory := {
-	"Money": 1000,
+	"Money": 100000,        # can edit for testing
 	"Years of life": 10,
 	"Fame": true
 }
 var player := player_inventory  # legacy alias
+var traits_owned := {}            # {"charm_bronze": true, "seduction_bronze": true}
+var skills_owned := {}            # {"guitar_bronze": true}
+var equipped_traits: Array[String] = []
+var max_trait_slots := 1
+var souls_currency := 0           # spent in Power Store
 
+func get_equipped_traits() -> Array[String]:
+	return equipped_traits.duplicate()
+
+func add_souls(n:int) -> void:
+	souls_currency = max(0, souls_currency + n)
+	emit_signal("inventory_changed")
+
+func spend_souls(n:int) -> bool:
+	if souls_currency >= n:
+		souls_currency -= n
+		emit_signal("inventory_changed")
+		return true
+	return false
+
+func give_trait(id:String) -> void:
+	traits_owned[id] = true
+	emit_signal("inventory_changed")
+
+func equip_trait(id:String) -> bool:
+	if not traits_owned.has(id): return false
+	if equipped_traits.has(id): return true
+	if equipped_traits.size() >= max_trait_slots: return false
+	equipped_traits.append(id)
+	emit_signal("inventory_changed")
+	return true
+
+func unequip_trait(id:String) -> void:
+	equipped_traits.erase(id)
+	emit_signal("inventory_changed")
 # ----- souls (PUBLIC, used by main.gd and panels) -----
 # Each soul now may include:
-# id, name, portrait (path), desire (string), inv (Dictionary), traits (Dictionary), skills (Array)
-var souls: Array[Dictionary] = []
+var souls: Array[Dictionary] = [
+	{"id":"s_ratzz","name":"Ratzz","class":"desperate","difficulty":"easy","inv":{"Soul":true}},
+	{"id":"s_sussie","name":"Sussie","class":"naive","difficulty":"easy","inv":{"Soul":true}},
+
+	{"id":"s_andrew","name":"Andrew","class":"", "difficulty":"medium",
+		"inv":{"Soul":true, "Trait: Charm (bronze)":true, "Skill: Guitar Player (bronze)":true}},
+
+	{"id":"s_cecylia","name":"Cecylia","class":"", "difficulty":"medium",
+		"inv":{"Soul":true, "Trait: Seduction (bronze)":true, "Skill: Mental business (bronze)":true}},
+
+	{"id":"s_vixy","name":"Vixy","class":"", "difficulty":"medium",
+		"inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Tactician (bronze)":true}},
+
+	{"id":"s_marcus","name":"Marcus","class":"", "difficulty":"medium",
+		"inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Card Player (bronze)":true}},
+
+	{"id":"s_reggie","name":"Reggie","class":"lawyer","difficulty":"hard",
+		"inv":{"Soul":true, "Trait: Manipulation (bronze)":true, "Skill: Business Mentality (silver)":true}},
+]
 
 # ----- clause & condition catalog (SOURCE OF TRUTH) -----
 const CAT_CLAUSE    := "clause"

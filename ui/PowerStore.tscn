@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3 uid="uid://b144amp7w63vh"]
+
+[ext_resource type="Script" uid="uid://c6sht7bh5a8tr" path="res://ui/PowerStore.gd" id="1_0fl21"]
+
+[node name="PowerStore" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0fl21")
+
+[node name="RootMargin" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Root" type="VBoxContainer" parent="RootMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderRow" type="HBoxContainer" parent="RootMargin/Root"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="RootMargin/Root/HeaderRow"]
+layout_mode = 2
+text = "POWER STORE"
+
+[node name="HSpacer" type="Control" parent="RootMargin/Root/HeaderRow"]
+layout_mode = 2
+
+[node name="SoulsLabel" type="Label" parent="RootMargin/Root/HeaderRow"]
+layout_mode = 2
+text = "Souls: 0"
+
+[node name="Card" type="Panel" parent="RootMargin/Root"]
+layout_mode = 2
+
+[node name="CardMargin" type="MarginContainer" parent="RootMargin/Root/Card"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="CardBox" type="VBoxContainer" parent="RootMargin/Root/Card/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ItemTitle" type="Label" parent="RootMargin/Root/Card/CardMargin/CardBox"]
+layout_mode = 2
+text = "Dual Trait Harness"
+
+[node name="Desc" type="RichTextLabel" parent="RootMargin/Root/Card/CardMargin/CardBox"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[b]Allows equipping two personality traits.[/b]"
+
+[node name="PriceRow" type="HBoxContainer" parent="RootMargin/Root/Card/CardMargin/CardBox"]
+layout_mode = 2
+
+[node name="Price" type="Label" parent="RootMargin/Root/Card/CardMargin/CardBox/PriceRow"]
+layout_mode = 2
+text = "Cost: 2 Souls"
+
+[node name="Spacer" type="Control" parent="RootMargin/Root/Card/CardMargin/CardBox/PriceRow"]
+layout_mode = 2
+
+[node name="BuyBtn" type="Button" parent="RootMargin/Root/Card/CardMargin/CardBox/PriceRow"]
+layout_mode = 2
+text = "Purchase"
+
+[node name="Status" type="Label" parent="RootMargin/Root"]
+layout_mode = 2
+text = " "

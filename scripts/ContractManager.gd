@@ -98,3 +98,86 @@ func create_contract(soul_id: String, human_name: String, offers: Array[String],
 		"acceptance": acceptance, "status": "ACTIVE"
 	})
 	return id
+func compute_bars(offers: Array[String], asks: Array[String], clauses: Array[String], human: Dictionary, equipped_traits: Array[String]) -> Dictionary:
+	var trust := 0.0
+	var suspicion := 0.0
+
+	# ---- Clauses from C&C.pdf ----
+	for c in clauses:
+		var lower := c.to_lower()
+
+		if lower.find("percentage") != -1:
+			var pct := _extract_int(c)
+			var blocks := int(roundi(pct / 10.0))
+			if _asks_money(asks):
+				suspicion += 20.0 * blocks   # +20 per 10% if the human wants money
+			elif _asks_skill(asks):
+				suspicion += 10.0 * blocks   # +10 per 10% if the human wants a skill
+		elif lower.find("no return") != -1:
+			suspicion += 30.0
+		elif lower.find("act of evil") != -1:
+			if lower.find("day") != -1:      suspicion += 80.0
+			elif lower.find("week") != -1:   suspicion += 20.0
+			elif lower.find("month") != -1:  suspicion += 5.0
+		elif lower.find("dies before") != -1:
+			trust += 40.0
+
+	# ---- Conditions from Conditions.pdf ----
+	# Add trust/susp bumps based on the human’s desire
+	for c in clauses:
+		var lower := c.to_lower()
+		if lower.find("isn't famous") != -1 or lower.find("not receive") != -1:
+			trust += 40.0
+
+	# ---- Asking for Soul adds suspicion equal to its value (PROTOTYPE RUN) ----
+	if _asks_soul(asks):
+		suspicion += _soul_value_for(human)  # 50 easy, 100-140 medium, 130-170 hard
+
+	# ---- Equipped trait modifiers (Charm +10% trust; Seduction -10% suspicion) ----
+	var trust_pct := 0.0
+	var susp_pct  := 0.0
+	for t in equipped_traits:
+		if t.begins_with("charm"):      trust_pct += 0.10
+		if t.begins_with("seduction"):  susp_pct  -= 0.10
+
+	# ---- Human class modifiers (Desperate / Naive / Lawyer) ----
+	var klass := String(human.get("class","")).to_lower()
+	if klass == "desperate": susp_pct -= 0.10
+	if klass == "naive":     trust_pct += 0.10
+	if klass == "lawyer":
+		susp_pct += 0.20
+		trust_pct -= 0.20
+
+	# Apply per-stat %
+	trust = max(0.0, trust * (1.0 + trust_pct))
+	suspicion = max(0.0, suspicion * (1.0 + susp_pct))
+
+	return {"trust": trust, "suspicion": suspicion}
+
+func _asks_money(lines: Array[String]) -> bool:
+	for l in lines:
+		if l.to_lower().begins_with("money"): return true
+	return false
+
+func _asks_skill(lines: Array[String]) -> bool:
+	for l in lines:
+		if l.to_lower().find("skill") != -1: return true
+	return false
+
+func _asks_soul(lines: Array[String]) -> bool:
+	for l in lines:
+		if l.to_lower().find("soul") != -1: return true
+	return false
+
+func _extract_int(text: String) -> int:
+	var s := ""
+	for ch in text:
+		if ch >= "0" and ch <= "9": s += ch
+	return int(s if s != "" else "0")
+
+func _soul_value_for(human: Dictionary) -> int:
+	var diff := String(human.get("difficulty","easy")).to_lower()
+	if diff == "easy": return 50
+	if diff == "medium": return 120 # mid of 100-140
+	if diff == "hard": return 150   # mid of 130-170
+	return 50

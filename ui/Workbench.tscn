@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://bkmc758a3qkjn"]
+[gd_scene load_steps=10 format=3 uid="uid://bkmc758a3qkjn"]
 
 [ext_resource type="Script" uid="uid://cfxwulywccjpv" path="res://scripts/Workbench.gd" id="1_ogq0w"]
 [ext_resource type="Texture2D" uid="uid://jx1k34i0uaxx" path="res://art/Contract.png" id="3_nelf4"]
 [ext_resource type="Script" uid="uid://bm5ltoj3nnbcd" path="res://scripts/ContractSection.gd" id="4_juv10"]
 [ext_resource type="Texture2D" uid="uid://cix82pbq1ibea" path="res://art/box.png" id="5_2kcg2"]
+[ext_resource type="Script" uid="uid://cftgoktu6njqm" path="res://ui/InventoryOverlay.gd" id="5_ogq0w"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_trn2v"]
 content_margin_left = 218.0
@@ -17,6 +18,8 @@ texture = ExtResource("3_nelf4")
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5vvyt"]
 texture = ExtResource("5_2kcg2")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wct73"]
+
 [node name="Workbench" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -26,6 +29,52 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ogq0w")
 metadata/_tab_index = 0
+
+[node name="BarsDock" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 0
+offset_left = 336.0
+offset_top = 56.0
+offset_right = 426.0
+offset_bottom = 130.0
+
+[node name="Susp_Row" type="HBoxContainer" parent="BarsDock"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BarsDock/Susp_Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Suspicion"
+
+[node name="SuspValue" type="Label" parent="BarsDock/Susp_Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "0"
+
+[node name="SuspSlider" type="VSlider" parent="BarsDock"]
+modulate = Color(0.886275, 0.54902, 0.54902, 1)
+layout_mode = 2
+max_value = 200.0
+editable = false
+
+[node name="Trust_Row" type="HBoxContainer" parent="BarsDock"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BarsDock/Trust_Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.65098, 1, 1)
+text = "Trust"
+
+[node name="TrustValue" type="Label" parent="BarsDock/Trust_Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.65098, 1, 1)
+text = "0"
+
+[node name="TrustSlider" type="VSlider" parent="BarsDock"]
+modulate = Color(0.552941, 0.776471, 0.94902, 1)
+layout_mode = 2
+max_value = 200.0
+editable = false
 
 [node name="WB_VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -158,3 +207,42 @@ layout_mode = 2
 [node name="Button" type="Button" parent="WB_VBox/WB_Footer"]
 layout_mode = 2
 text = "Finish"
+
+[node name="InventoryOverlay" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -265.0
+offset_right = 325.0
+offset_bottom = 154.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wct73")
+script = ExtResource("5_ogq0w")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InventoryOverlay"]
+layout_mode = 2
+
+[node name="EquipRow" type="HBoxContainer" parent="InventoryOverlay/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="EquipBtnA" type="Button" parent="InventoryOverlay/VBoxContainer/EquipRow"]
+layout_mode = 2
+text = "EQUIP TRAIT"
+
+[node name="EquipBtnB" type="Button" parent="InventoryOverlay/VBoxContainer/EquipRow"]
+layout_mode = 2
+disabled = true
+text = "EQUIP TRAIT…"
+
+[node name="ChipFlow" type="FlowContainer" parent="InventoryOverlay/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+last_wrap_alignment = 2

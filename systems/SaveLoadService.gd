@@ -114,7 +114,7 @@ func _collect_state() -> Dictionary:
 	if ongoing_any != null:
 		gdb["ongoing_contracts"] = ongoing_any
 	d["gamedb"] = gdb
-
+	
 	return d
 
 # ---------- restore ----------
