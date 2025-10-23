@@ -18,14 +18,16 @@ var _agreed := true
 var _stage := 0  # 0 = choices, 1 = confirm
 
 func _ready() -> void:
-	# Resolve Avatar safely (won't crash if node isn't there)
 	_avatar = get_node_or_null("Control/Avatar") as TextureRect
 
-	_btn_suggest.pressed.connect(func(): _on_pick(false))
-	_btn_agree.pressed.connect(func(): _on_pick(true))
-	_start_btn.pressed.connect(_on_start)
+	if _btn_suggest and not _btn_suggest.pressed.is_connected(Callable(self, "_on_pick").bind(false)):
+		_btn_suggest.pressed.connect(Callable(self, "_on_pick").bind(false))
+	if _btn_agree and not _btn_agree.pressed.is_connected(Callable(self, "_on_pick").bind(true)):
+		_btn_agree.pressed.connect(Callable(self, "_on_pick").bind(true))
+	if _start_btn and not _start_btn.pressed.is_connected(Callable(self, "_on_start")):
+		_start_btn.pressed.connect(Callable(self, "_on_start"))
 
-	visible = false  # design/layout is handled in the scene
+	visible = false
 
 func start_for(index: int) -> void:
 	_idx = index
@@ -61,7 +63,7 @@ func _on_pick(agreed: bool) -> void:
 
 func _on_start() -> void:
 	if _idx >= 0:
-		emit_signal("proceed_to_workbench", _idx)
+		proceed_to_workbench.emit(_idx)
 	close()
 
 # --- desire text (placeholder) ---

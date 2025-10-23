@@ -45,30 +45,34 @@ func _bootstrap_layout() -> void:
 
 func _wire_signals() -> void:
 	# Profile overlay -> Offer a deal
-	if profile_overlay and not profile_overlay.is_connected("offer_deal_requested", Callable(self, "_on_offer_deal")):
-		profile_overlay.offer_deal_requested.connect(_on_offer_deal)
+	if profile_overlay and profile_overlay.has_signal("offer_deal_requested"):
+		if not profile_overlay.offer_deal_requested.is_connected(Callable(self, "_on_offer_deal")):
+			profile_overlay.offer_deal_requested.connect(Callable(self, "_on_offer_deal"))
 
 	# Dialogue overlay -> proceed to workbench
-	if dialogue_overlay and not dialogue_overlay.is_connected("proceed_to_workbench", Callable(self, "_on_dialogue_proceed")):
-		dialogue_overlay.proceed_to_workbench.connect(_on_dialogue_proceed)
+	if dialogue_overlay and dialogue_overlay.has_signal("proceed_to_workbench"):
+		if not dialogue_overlay.proceed_to_workbench.is_connected(Callable(self, "_on_dialogue_proceed")):
+			dialogue_overlay.proceed_to_workbench.connect(Callable(self, "_on_dialogue_proceed"))
 
 	# Workbench -> contract finished
-	if workbench and not workbench.is_connected("contract_ready", Callable(self, "_on_contract_ready")):
-		workbench.contract_ready.connect(_on_contract_ready)
+	if workbench and workbench.has_signal("contract_ready"):
+		if not workbench.contract_ready.is_connected(Callable(self, "_on_contract_ready")):
+			workbench.contract_ready.connect(Callable(self, "_on_contract_ready"))
 
 	# Souls list clicks
 	if souls_list:
-		if not souls_list.item_selected.is_connected(_on_soul_pick):
-			souls_list.item_selected.connect(_on_soul_pick)
-		if not souls_list.item_activated.is_connected(_on_soul_pick):
-			souls_list.item_activated.connect(_on_soul_pick)
-		if not souls_list.item_clicked.is_connected(_on_soul_clicked):
-			souls_list.item_clicked.connect(_on_soul_clicked)
+		if not souls_list.item_selected.is_connected(Callable(self, "_on_soul_pick")):
+			souls_list.item_selected.connect(Callable(self, "_on_soul_pick"))
+		if not souls_list.item_clicked.is_connected(Callable(self, "_on_soul_clicked")):
+			souls_list.item_clicked.connect(Callable(self, "_on_soul_clicked"))
+		if souls_list.item_activated.is_connected(Callable(self, "_on_soul_pick")):
+			souls_list.item_activated.disconnect(Callable(self, "_on_soul_pick"))
 
-	# Legacy SoulsPanel signal (if still used)
+	# Legacy SoulsPanel
 	if souls_panel and souls_panel.has_signal("soul_selected"):
-		if not souls_panel.is_connected("soul_selected", Callable(self, "_on_soul_selected")):
-			souls_panel.soul_selected.connect(_on_soul_selected)
+		if not souls_panel.soul_selected.is_connected(Callable(self, "_on_soul_selected")):
+			souls_panel.soul_selected.connect(Callable(self, "_on_soul_selected"))
+
 
 func _populate_souls_list() -> void:
 	if souls_list == null:
@@ -116,7 +120,13 @@ func _on_dialogue_proceed(index: int) -> void:
 func _open_workbench(index: int) -> void:
 	if workbench:
 		workbench.visible = true
-	_switch_to_tab_control(workbench)
+
+	# Try by Control reference first
+	var switched := _switch_to_tab_control(workbench)
+	# Fallback by tab name if needed
+	if not switched:
+		_switch_to_tab_named("Workbench")
+
 	if workbench and workbench.has_method("set_current_soul"):
 		workbench.call("set_current_soul", index)
 
@@ -127,13 +137,14 @@ func _on_contract_ready(_i: int, _o: Array[String], _a: Array[String], _c: Array
 	_switch_to_tab_named("Ongoing")
 
 # --- Tab helpers ---
-func _switch_to_tab_control(ctrl: Control) -> void:
+func _switch_to_tab_control(ctrl: Control) -> bool:
 	if right_tabs == null or ctrl == null:
-		return
+		return false
 	for i in range(right_tabs.get_tab_count()):
 		if right_tabs.get_tab_control(i) == ctrl:
 			right_tabs.current_tab = i
-			return
+			return true
+	return false
 
 func _switch_to_tab_named(name: String) -> void:
 	if right_tabs == null:

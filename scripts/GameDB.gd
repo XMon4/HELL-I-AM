@@ -215,19 +215,27 @@ var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,cla
 
 func _ready() -> void:
 	seed_if_empty()
-	# Bridge Economy → UI
-	if Economy and not Economy.balance_changed.is_connected(_on_bal):
-		Economy.balance_changed.connect(_on_bal)
-	# initialize mirror
+
+	# Hook Economy → UI mirror
+	if Economy and not Economy.balance_changed.is_connected(Callable(self, "_on_bal")):
+		Economy.balance_changed.connect(Callable(self, "_on_bal"))
+	else:
+		# If autoload order is uncertain, try again next frame
+		call_deferred("_try_hook_economy")
+
+	# Initialize mirror now
 	souls_currency = Economy.get_balance(Economy.Currency.SOULS)
-	emit_signal("souls_changed")
-	emit_signal("contracts_changed")
-	emit_signal("inventory_changed")
-	
+	inventory_changed.emit()  # UI refresh
+
+func _try_hook_economy() -> void:
+	if Economy and not Economy.balance_changed.is_connected(Callable(self, "_on_bal")):
+		Economy.balance_changed.connect(Callable(self, "_on_bal"))
+
 func _on_bal(currency: int, _value: int) -> void:
 	if currency == Economy.Currency.SOULS:
 		souls_currency = Economy.get_balance(Economy.Currency.SOULS)
 		inventory_changed.emit()
+
 # ====== contracts ======
 func add_contract(c: Dictionary) -> void:
 	ongoing_contracts.append(c)

@@ -243,7 +243,7 @@ func _apply_state(d: Dictionary) -> void:
 			if GameDB.has_signal("contracts_changed"):
 				GameDB.contracts_changed.emit()
 
-	# Sync the UI mirror of Souls to Economy (Economy is canonical)
+	# Sync the UI mirror of Souls to Economy
 	GameDB.souls_currency = Economy.get_balance(Economy.Currency.SOULS)
 	if GameDB.has_signal("inventory_changed"):
 		GameDB.inventory_changed.emit()
