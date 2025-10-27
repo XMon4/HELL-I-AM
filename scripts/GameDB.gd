@@ -101,8 +101,11 @@ var clause_catalog: Array[Dictionary] = [
 # Legacy name->portrait fallback (kept for compatibility; profiles now carry 'portrait')
 var _portrait_paths := {
 	"andrew": "res://art/Andrew.png",
-	"vixy":          "res://art/Vixy.png",
-	"cecylia":       "res://art/Cecylia.png",
+	"vixy": "res://art/Vixy.png",
+	"cecylia": "res://art/Cecylia.png",
+	"reggie": "res://art/Reggie.png",
+	"marcus": "res://art/Marcus.png",
+	"susie": "res://art/Susie.png"
 }
 
 # Known condition IDs so we don't rely only on name heuristics.

@@ -51,11 +51,11 @@ layout_mode = 2
 theme_override_colors/font_color = Color(1, 0, 0, 1)
 text = "0"
 
-[node name="SuspSlider" type="VSlider" parent="BarsDock"]
+[node name="SuspSlider" type="ProgressBar" parent="BarsDock"]
 modulate = Color(0.886275, 0.54902, 0.54902, 1)
 layout_mode = 2
 max_value = 200.0
-editable = false
+show_percentage = false
 
 [node name="Trust_Row" type="HBoxContainer" parent="BarsDock"]
 layout_mode = 2
@@ -70,11 +70,11 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.65098, 1, 1)
 text = "0"
 
-[node name="TrustSlider" type="VSlider" parent="BarsDock"]
+[node name="TrustSlider" type="ProgressBar" parent="BarsDock"]
 modulate = Color(0.552941, 0.776471, 0.94902, 1)
 layout_mode = 2
 max_value = 200.0
-editable = false
+show_percentage = false
 
 [node name="WB_VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -216,9 +216,9 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -360.0
-offset_top = -265.0
-offset_right = 325.0
-offset_bottom = 154.0
+offset_top = -150.0
+offset_right = -60.0
+offset_bottom = 50.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wct73")

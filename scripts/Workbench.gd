@@ -8,7 +8,13 @@ signal contract_ready(
 	acceptance: float
 )
 
-# LEFT: sections under parchment (paths per your scene)
+# --- Stat bars
+@onready var susp_slider: Range      = $"BarsDock/SuspSlider"
+@onready var trust_slider: Range     = $"BarsDock/TrustSlider"
+@onready var susp_value_lbl: Label   = $"BarsDock/Susp_Row/SuspValue"
+@onready var trust_value_lbl: Label  = $"BarsDock/Trust_Row/TrustValue"
+
+# LEFT: sections under parchment
 @onready var sec_offer: ContractSection  = $WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Offer
 @onready var sec_ask: ContractSection    = $WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Ask
 @onready var sec_clause: ContractSection = $WB_VBox/WB_Rows/ScrollHolder/Parchment/ContractScroll/Scroll/ContractBox/Section_Clause
@@ -35,7 +41,7 @@ var clause_meta: Array[Dictionary] = []   # keeps id/params/label for clauses
 
 var _current_panel_key: String = ""       # "offer" | "ask" | "clause"
 
-# visual lists on parchment (under each section header)
+# visual lists on parchment
 var _offer_list: VBoxContainer
 var _ask_list: VBoxContainer
 var _clause_list: VBoxContainer
@@ -59,6 +65,20 @@ func _ready() -> void:
 
 	if not finish_btn.is_connected("pressed", Callable(self, "_on_finish")):
 		finish_btn.pressed.connect(_on_finish)
+	if bar:
+		bar.visible = false
+		bar.tooltip_text = ""
+
+	if susp_slider:
+		susp_slider.min_value = 0
+		susp_slider.max_value = 100
+	if trust_slider:
+		trust_slider.min_value = 0
+		trust_slider.max_value = 100
+
+	_show_hint("Tap Offer / Ask / Clauses to see options.")
+	_refresh_accept()
+	_validate()
 
 	# tabs behavior (scene-defined buttons)
 	if not btn_clauses.is_connected("pressed", Callable(self, "_on_btn_clauses")):
@@ -387,14 +407,40 @@ func _format_clause_label(cdef: Dictionary, params: Dictionary) -> String:
 
 # --- acceptance / finish ---
 func _refresh_accept() -> void:
-	if current_index < 0:
-		bar.value = 0
-		bar.tooltip_text = "Select a human to begin."
-		return
-	var traits: Dictionary = GameDB.traits_by_index(current_index)
-	var p: float = ContractManager.evaluate(offers.duplicate(), asks.duplicate(), clauses.duplicate(), traits)
-	bar.value = int(round(p * 100.0))
-	bar.tooltip_text = "%d%%" % int(bar.value)
+	# --- compute Trust/Susp from selections
+	var trust_f := 0.0
+	var susp_f  := 0.0
+
+	if current_index >= 0 and current_index < GameDB.index_count():
+		var human: Dictionary = GameDB.souls[current_index]
+		var eq: Array[String] = []
+		if GameDB and GameDB.has_method("get_equipped_traits"):
+			eq = GameDB.get_equipped_traits()
+
+		var st: Dictionary = ContractManager.compute_bars(
+			offers.duplicate(), asks.duplicate(), clauses.duplicate(),
+			human, eq
+		)
+		trust_f = float(st.get("trust", 0.0))
+		susp_f  = float(st.get("suspicion", 0.0))
+
+	# Clamp to 0..100 and push to UI
+	var trust_i := clampi(int(round(trust_f)), 0, 100)
+	var susp_i  := clampi(int(round(susp_f)),  0, 100)
+
+	if trust_slider:     trust_slider.value = trust_i
+	if susp_slider:      susp_slider.value  = susp_i
+	if trust_value_lbl:  trust_value_lbl.text = str(trust_i)
+	if susp_value_lbl:   susp_value_lbl.text  = str(susp_i)
+
+	# --- keep computing acceptance for internal use
+	var p := 0.0
+	if current_index >= 0:
+		var traits: Dictionary = GameDB.traits_by_index(current_index)
+		p = ContractManager.evaluate(offers.duplicate(), asks.duplicate(), clauses.duplicate(), traits)
+
+	if bar:
+		bar.value = int(round(p * 100.0))
 
 func _on_contracts_remaining_changed(remaining: int) -> void:
 	if finish_btn:
