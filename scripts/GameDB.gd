@@ -13,7 +13,9 @@ var player_inventory := {
 }
 var player := player_inventory  # legacy alias
 var traits_owned := {}            # {"charm_bronze": true, "seduction_bronze": true}
-var skills_owned := {}            # {"guitar_bronze": true}
+var skills_owned := {             # {"guitar_bronze": true}
+	"skill:painter": true,
+	"skill:shooter": true} 
 var equipped_traits: Array[String] = []
 var max_trait_slots := 1
 var souls_currency := 0           # spent in Power Store
@@ -49,25 +51,25 @@ func unequip_trait(id:String) -> void:
 # ----- souls (PUBLIC, used by main.gd and panels) -----
 # Each soul now may include:
 var souls: Array[Dictionary] = [
-	{"id":"s_ratzz","name":"Ratzz","class":"desperate","difficulty":"easy","inv":{"Soul":true}},
-	{"id":"s_sussie","name":"Sussie","class":"naive","difficulty":"easy","inv":{"Soul":true}},
+{"id":"s_ratzz",  "name":"Ratzz",  "class":"desperate","difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
+{"id":"s_sussie","name":"Sussie", "class":"naive",    "difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
 
-	{"id":"s_andrew","name":"Andrew","class":"", "difficulty":"medium",
-		"inv":{"Soul":true, "Trait: Charm (bronze)":true, "Skill: Guitar Player (bronze)":true}},
+{"id":"s_andrew","name":"Andrew","class":"", "difficulty":"medium","desire":"fame",
+ "inv":{"Soul":true, "Trait: Charm (bronze)":true, "Skill: Guitar Player (bronze)":true}},
 
-	{"id":"s_cecylia","name":"Cecylia","class":"", "difficulty":"medium",
-		"inv":{"Soul":true, "Trait: Seduction (bronze)":true, "Skill: Mental business (bronze)":true}},
+{"id":"s_cecylia","name":"Cecylia","class":"", "difficulty":"medium","desire":"happiness",
+ "inv":{"Soul":true, "Trait: Seduction (bronze)":true, "Skill: Mental business (bronze)":true}},
 
-	{"id":"s_vixy","name":"Vixy","class":"", "difficulty":"medium",
-		"inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Tactician (bronze)":true}},
+{"id":"s_vixy",  "name":"Vixy",  "class":"", "difficulty":"medium","desire":"revenge",
+ "inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Tactician (bronze)":true}},
 
-	{"id":"s_marcus","name":"Marcus","class":"", "difficulty":"medium",
-		"inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Card Player (bronze)":true}},
+{"id":"s_marcus","name":"Marcus","class":"", "difficulty":"medium","desire":"happiness",
+ "inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Card Player (bronze)":true}},
 
-	{"id":"s_reggie","name":"Reggie","class":"lawyer","difficulty":"hard",
-		"inv":{"Soul":true, "Trait: Manipulation (bronze)":true, "Skill: Business Mentality (silver)":true}},
+{"id":"s_reggie","name":"Reggie","class":"lawyer","difficulty":"hard","desire":"happiness",
+ "inv":{"Soul":true, "Trait: Manipulation (bronze)":true, "Skill: Business Mentality (silver)":true}},
+
 ]
-
 # ----- clause & condition catalog (SOURCE OF TRUTH) -----
 const CAT_CLAUSE    := "clause"
 const CAT_CONDITION := "condition"
@@ -212,6 +214,10 @@ func get_portrait_tex_by_index(i: int) -> Texture2D:
 		_portrait_cache[path] = res
 		return res
 	return null
+	
+func give_skill(id:String) -> void:
+	skills_owned[id] = true
+	emit_signal("inventory_changed")
 
 # ----- ongoing contracts -----
 var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,clauses,acceptance}]
@@ -309,7 +315,9 @@ func list_player_offers() -> Array[String]:
 		if v is int:
 			var val_text := ""
 			if k == "Money":
-				val_text = "$%d" % int(v)
+				var v_money := Economy.get_balance(Economy.Currency.MONEY) if Economy else int(player_inventory.get("Money", 0))
+				out.append("Money: $" + str(v_money))
+				continue
 			else:
 				val_text = str(v)
 			out.append("%s: %s" % [k, val_text])

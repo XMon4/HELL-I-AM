@@ -225,8 +225,10 @@ func _show_options_for(key: String) -> void:
 			header.visible = false
 			options_title.text = "What You Can Offer"
 			for text in GameDB.list_player_offers():
-				list_holder.add_child(_make_simple_option_button(text, "offer"))
-
+				if text.begins_with("Money"):
+					list_holder.add_child(_wrap_panel(	_money_offer_widget()))
+				else:
+					list_holder.add_child(_make_simple_option_button(text, "offer"))
 		"ask":
 			header.visible = false
 			options_title.text = "What You Can Ask For"
@@ -244,6 +246,53 @@ func _show_options_for(key: String) -> void:
 
 	options_box.queue_sort()
 	options_scroll.queue_redraw()
+
+func _money_offer_widget() -> Control:
+	var vb := VBoxContainer.new()
+	var title := Label.new(); title.text = "Offer Money (±10,000)"
+	var hb := HBoxContainer.new()
+
+	var max_money := Economy.get_balance(Economy.Currency.MONEY) if Economy else int(GameDB.player_inventory.get("Money", 0))
+	var offer := 0
+
+	var minus := Button.new(); minus.text = "-10k"
+	var value := Label.new(); value.text = "$0"; value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var plus  := Button.new(); plus.text  = "+10k"
+	var apply := Button.new(); apply.text = "Offer"
+
+	# local callable instead of a nested func
+	var refresh := func() -> void:
+		minus.disabled = offer <= 0
+		plus.disabled  = offer + 10_000 > max_money
+		value.text = "$" + str(offer)
+
+	minus.pressed.connect(func() -> void:
+		offer = max(0, offer - 10_000)
+		refresh.call()
+	)
+	plus.pressed.connect(func() -> void:
+		offer = min(max_money, offer + 10_000)
+		refresh.call()
+	)
+	apply.pressed.connect(func() -> void:
+		_upsert_money_offer(offer)  # ensures only one Money line exists
+	)
+
+	hb.add_child(minus)
+	hb.add_child(value)
+	hb.add_child(plus)
+	hb.add_child(apply)
+	vb.add_child(title)
+	vb.add_child(hb)
+
+	refresh.call()
+	return vb
+
+func _upsert_money_offer(amount:int) -> void:
+	# Remove any previous "Money:" entry, then add the new one (or none if 0)
+	sec_offer.remove_by_prefix("Money")
+	if amount > 0:
+		sec_offer.add_item("Money: $" + str(amount))
 
 # --------- header tab behavior ---------
 func _on_btn_clauses() -> void:
@@ -483,7 +532,23 @@ func _on_finish() -> void:
 			var m := _extract_int(s2)
 			if m > 0:
 				Economy.add(Economy.Currency.MONEY, m)
-
+	for a in asks:
+		var s2 := String(a)
+		if s2.begins_with("Soul"):
+			GameDB.add_souls(1)
+		elif s2.begins_with("Money"):
+			var m := _extract_int(s2)
+			if m > 0:
+				Economy.add(Economy.Currency.MONEY, m)
+		elif s2.begins_with("Skill"):
+			var label := s2.substr(s2.find(":") + 1).strip_edges()  # e.g. "Guitar Player (bronze)"
+			var id := "skill:" + label.to_lower().replace(" ", "_")
+			GameDB.give_skill(id)
+		elif s2.begins_with("Trait"):
+			var label := s2.substr(s2.find(":") + 1).strip_edges()  # e.g. "Charm (bronze)"
+			var id := "trait:" + label.to_lower().replace(" ", "_")
+			GameDB.give_trait(id)
+			
 	var sid := GameDB.id_by_index(current_index)
 	var sname := GameDB.name_by_index(current_index)
 	var contract := {

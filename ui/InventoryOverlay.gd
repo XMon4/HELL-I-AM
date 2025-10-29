@@ -13,19 +13,16 @@ func _ready() -> void:
 
 func _refresh() -> void:
 	equip_b.disabled = GameDB.max_trait_slots < 2
+	for c in flow.get_children(): c.queue_free()
 
-	for c in flow.get_children():
-		c.queue_free()
-
-	var money: int = int(GameDB.player_inventory.get("Money", 0))
+	# -- Persistent (top)
+	var money: int = Economy.get_balance(Economy.Currency.MONEY) if Economy else int(GameDB.player_inventory.get("Money", 0))
 	flow.add_child(_make_chip("MONEY: " + str(money), "money"))
 
-	flow.add_child(_make_chip("SOULS: " + str(GameDB.souls_currency), "souls"))
+	var souls_bal: int = Economy.get_balance(Economy.Currency.SOULS) if Economy else int(GameDB.souls_currency)
+	flow.add_child(_make_chip("SOULS: " + str(souls_bal), "souls"))
 
-	var fame_on: bool = bool(GameDB.player_inventory.get("Fame", false))
-	var fame_text: String = "Fame" if fame_on else "No Fame"
-	flow.add_child(_make_chip(fame_text, "fame"))
-
+	# -- Variable (bottom)
 	# Skills
 	for k in GameDB.skills_owned.keys():
 		if GameDB.skills_owned[k]:
@@ -35,10 +32,15 @@ func _refresh() -> void:
 	for k in GameDB.traits_owned.keys():
 		if GameDB.traits_owned[k]:
 			var chip: Button = _make_chip(_pretty(k), "trait")
-			if GameDB.equipped_traits.has(k):
-				chip.text += " [EQUIPPED]"
+			if GameDB.equipped_traits.has(k): chip.text += " [EQUIPPED]"
 			chip.pressed.connect(Callable(self, "_on_trait_chip").bind(k))
 			flow.add_child(chip)
+
+	# Fame goes last (treat as variable for now)
+	var fame_on: bool = bool(GameDB.player_inventory.get("Fame", false))
+	var fame_text: String = "Fame" if fame_on else "No Fame"
+	flow.add_child(_make_chip(fame_text, "fame"))
+
 
 func _make_chip(text: String, kind: String) -> Button:
 	var b: Button = Button.new()

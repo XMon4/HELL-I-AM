@@ -102,8 +102,12 @@ func create_contract(soul_id: String, human_name: String, offers: Array[String],
 func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[String], human: Dictionary, equipped_traits: Array[String]) -> Dictionary:
 	var trust := 0.0
 	var suspicion := 0.0
-
-	# Detect what the human wants (money vs skill/trait-like upgrades)
+	for l in _offers:
+		if l.to_lower().begins_with("money"):
+			var amt := _extract_int(l)
+			if amt > 0:
+				trust += float(amt) / 1000.0
+	# Detect what the human wants
 	var wants_money := _asks_money(asks)
 	var wants_skill := _asks_skill(asks)
 

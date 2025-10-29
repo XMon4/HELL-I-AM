@@ -39,7 +39,7 @@ func _ensure_controls() -> void:
 	if list == null:
 		list = find_child("Items", true, false) as ItemList
 
-	# Create if missing (keeps Section_Clause safe even if scene lacks nodes)
+	# Create if missing
 	if header_btn == null:
 		header_btn = Button.new()
 		header_btn.name = "Header"
@@ -50,7 +50,7 @@ func _ensure_controls() -> void:
 		list.name = "Items"
 		add_child(list)
 
-	# Sane layout defaults
+	# layout defaults
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -60,11 +60,11 @@ func _on_header() -> void:
 func add_item(label: String, data: Dictionary = {}) -> void:
 	if list == null:
 		return
-	for i in range(list.item_count):  # FIX
+	for i in range(list.get_item_count()):
 		if list.get_item_text(i) == label:
 			return
 	list.add_item(label)
-	list.set_item_metadata(list.item_count - 1, data)
+	list.set_item_metadata(list.get_item_count() - 1, data)
 	emit_signal("items_changed", section_key, get_labels(), get_items_meta())
 
 func set_items(items: Array[Dictionary]) -> void:
@@ -73,7 +73,7 @@ func set_items(items: Array[Dictionary]) -> void:
 	for d in items:
 		var lbl := String(d.get("label", ""))
 		list.add_item(lbl)
-		list.set_item_metadata(list.item_count - 1, d.get("meta", {}))
+		list.set_item_metadata(list.get_item_count() - 1, d.get("meta", {}))
 	emit_signal("items_changed", section_key, get_labels(), get_items_meta())
 
 func clear() -> void:
@@ -85,7 +85,7 @@ func get_labels() -> Array[String]:
 	var out: Array[String] = []
 	if list == null:
 		return out
-	for i in range(list.item_count):  # FIX
+	for i in range(list.get_item_count()):
 		out.append(list.get_item_text(i))
 	return out
 
@@ -93,6 +93,16 @@ func get_items_meta() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if list == null:
 		return out
-	for i in range(list.item_count):  # FIX
+	for i in range(list.get_item_count()):
 		out.append(list.get_item_metadata(i))
 	return out
+
+# remove items from the ItemList by text prefix (used by money upsert)
+func remove_by_prefix(prefix:String) -> void:
+	_ensure_controls()
+	if list == null:
+		return
+	for i in range(list.get_item_count() - 1, -1, -1):
+		if String(list.get_item_text(i)).begins_with(prefix):
+			list.remove_item(i)
+	emit_signal("items_changed", section_key, get_labels(), get_items_meta())
