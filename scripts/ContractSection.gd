@@ -12,7 +12,6 @@ var header_btn: Button
 var list: ItemList
 
 func _ready() -> void:
-	# Fallback: infer section_key from node name if not set in Inspector
 	if section_key.is_empty():
 		var ln := name.to_lower()
 		if "offer" in ln:
@@ -27,32 +26,37 @@ func _ready() -> void:
 		header_btn.pressed.connect(_on_header)
 
 func _ensure_controls() -> void:
-	# From exported paths
 	if header_btn == null and header_path != NodePath(""):
 		header_btn = get_node_or_null(header_path) as Button
 	if list == null and list_path != NodePath(""):
 		list = get_node_or_null(list_path) as ItemList
 
-	# Fallback by name
+	# Fallbacks
 	if header_btn == null:
-		header_btn = find_child("Header", true, false) as Button
+		var btns := find_children("*", "Button", true, false)
+		for b in btns:
+			if (b as Button).name.to_lower().contains("header"):
+				header_btn = b as Button
+				break
+		if header_btn == null and btns.size() > 0:
+			header_btn = btns[0] as Button
+
 	if list == null:
-		list = find_child("Items", true, false) as ItemList
+		var lists := find_children("*", "ItemList", true, false)
+		if lists.size() > 0:
+			list = lists[0] as ItemList
 
 	# Create if missing
 	if header_btn == null:
-		header_btn = Button.new()
-		header_btn.name = "Header"
+		header_btn = Button.new(); header_btn.name = "Header"
 		header_btn.text = (section_key.capitalize() if not section_key.is_empty() else "Section")
 		add_child(header_btn, 0)
 	if list == null:
-		list = ItemList.new()
-		list.name = "Items"
+		list = ItemList.new(); list.name = "Items"
 		add_child(list)
 
-	# layout defaults
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 
 func _on_header() -> void:
 	emit_signal("header_clicked", section_key)
@@ -97,11 +101,9 @@ func get_items_meta() -> Array[Dictionary]:
 		out.append(list.get_item_metadata(i))
 	return out
 
-# remove items from the ItemList by text prefix (used by money upsert)
 func remove_by_prefix(prefix:String) -> void:
 	_ensure_controls()
-	if list == null:
-		return
+	if list == null: return
 	for i in range(list.get_item_count() - 1, -1, -1):
 		if String(list.get_item_text(i)).begins_with(prefix):
 			list.remove_item(i)

@@ -48,11 +48,25 @@ func equip_trait(id:String) -> bool:
 func unequip_trait(id:String) -> void:
 	equipped_traits.erase(id)
 	emit_signal("inventory_changed")
+
+func list_owned_skills_pretty() -> Array[String]:
+	var out: Array[String] = []
+	for id in skills_owned.keys():
+		if skills_owned[id]:
+			out.append(_pretty_from_skill_id(id))
+	out.sort()
+	return out
+
+func _pretty_from_skill_id(id: String) -> String:
+	var parts := id.split(":")
+	var core := parts[1] if parts.size() > 1 else id
+	return core.replace("_", " ").capitalize()
+
 # ----- souls (PUBLIC, used by main.gd and panels) -----
 # Each soul now may include:
 var souls: Array[Dictionary] = [
 {"id":"s_ratzz",  "name":"Ratzz",  "class":"desperate","difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
-{"id":"s_sussie","name":"Sussie", "class":"naive",    "difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
+{"id":"s_susie","name":"Susie", "class":"naive",    "difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
 
 {"id":"s_andrew","name":"Andrew","class":"", "difficulty":"medium","desire":"fame",
  "inv":{"Soul":true, "Trait: Charm (bronze)":true, "Skill: Guitar Player (bronze)":true}},
@@ -107,7 +121,8 @@ var _portrait_paths := {
 	"cecylia": "res://art/Cecylia.png",
 	"reggie": "res://art/Reggie.png",
 	"marcus": "res://art/Marcus.png",
-	"susie": "res://art/Susie.png"
+	"susie": "res://art/Susie.png",
+	"ratzz": "res://art/Ratzz.png",
 }
 
 # Known condition IDs so we don't rely only on name heuristics.
@@ -218,6 +233,11 @@ func get_portrait_tex_by_index(i: int) -> Texture2D:
 func give_skill(id:String) -> void:
 	skills_owned[id] = true
 	emit_signal("inventory_changed")
+	
+func remove_skill(id:String) -> void:
+	if skills_owned.has(id):
+		skills_owned[id] = false
+		emit_signal("inventory_changed")
 
 # ----- ongoing contracts -----
 var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,clauses,acceptance}]

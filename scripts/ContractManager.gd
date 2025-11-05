@@ -103,7 +103,8 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 	var trust := 0.0
 	var suspicion := 0.0
 	for l in _offers:
-		if l.to_lower().begins_with("money"):
+		var low := l.to_lower()
+		if low.begins_with("money"):
 			var amt := _extract_int(l)
 			if amt > 0:
 				trust += float(amt) / 1000.0

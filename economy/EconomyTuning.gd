@@ -2,7 +2,7 @@ class_name EconomyTuning
 extends Resource
 
 @export_group("Start Balances")
-@export var starting_money: int = 100
+@export var starting_money: int = 100000
 @export var starting_ore:   int = 0
 @export var starting_souls: int = 0
 
