@@ -7,7 +7,7 @@ signal inventory_changed
 
 # ----- player inventory -----
 var player_inventory := {
-	"Money": 100000,        # can edit for testing
+	"Money": 80000,        # can edit for testing
 	"Years of life": 10,
 	"Fame": true
 }
@@ -36,7 +36,12 @@ func spend_souls(n:int) -> bool:
 func give_trait(id:String) -> void:
 	traits_owned[id] = true
 	emit_signal("inventory_changed")
-
+	
+func remove_trait(id:String) -> void:
+	if traits_owned.has(id):
+		traits_owned[id] = false
+		emit_signal("inventory_changed")
+		
 func equip_trait(id:String) -> bool:
 	if not traits_owned.has(id): return false
 	if equipped_traits.has(id): return true

@@ -2,6 +2,8 @@ extends Node
 
 var contracts: Array[Dictionary] = []
 var _next_id: int = 1
+const TRUST_PER_1000_MONEY := 1.0
+const COST_SKILL := 40.0
 
 func evaluate(offers: Array[String], asks: Array[String], clauses: Array[String], _traits: Dictionary) -> float:
 	var score := 0.0
@@ -39,51 +41,52 @@ func _compute_clause_effects(clauses: Array[String], asks: Array[String]) -> Dic
 	var wants_money := false
 	var wants_skill := false
 	for a in asks:
-		var low := a.to_lower()
-		if low.begins_with("money"):
+		var al := a.to_lower()
+		if al.begins_with("money"):
 			wants_money = true
-		if (low.find("skill") != -1) or (low.find("beauty") != -1) or (low.find("charisma") != -1):
+		if al.find("skill") != -1 or al.find("beauty") != -1 or al.find("charisma") != -1:
 			wants_skill = true
 
+	# Case-insensitive tithe by matching lower-cased text
 	var tithe_re := RegEx.new()
-	tithe_re.compile("Tithe: Satan charges (\\d+)% of earnings")
+	tithe_re.compile("tithe: satan charges (\\d+)% of earnings")
 
 	for c in clauses:
-		var m := tithe_re.search(c)
+		var cl := c.to_lower()
+
+		var m := tithe_re.search(cl)
 		if m:
 			var pct := float(m.get_string(1).to_int())
-			if wants_money:
-				suspicion += 2.0 * pct    # +20 per 10% → 2×%
-			elif wants_skill:
-				suspicion += 1.0 * pct    # +10 per 10% → 1×%
+			if wants_money: suspicion += 2.0 * pct   # +20 per 10%
+			elif wants_skill: suspicion += 1.0 * pct # +10 per 10%
 			continue
 
-		if c.find("No Returns") != -1:
+		if cl.find("no returns") != -1 or cl.find("no return") != -1:
 			suspicion += 30.0
 			continue
 
-		if c.find("Maintenance: evil act every Day") != -1:
+		if cl.find("evil act every day") != -1:
 			suspicion += 80.0
 			continue
-		if c.find("Maintenance: evil act every Week") != -1:
+		if cl.find("evil act every week") != -1:
 			suspicion += 20.0
 			continue
-		if c.find("Maintenance: evil act every Month") != -1:
+		if cl.find("evil act every month") != -1:
 			suspicion += 5.0
 			continue
 
-		if c.find("Death Clause: Contract is void") != -1:
+		if cl.find("contract is void") != -1:
 			trust += 40.0
 			continue
-		if c.find("Death Clause: Satan takes soul") != -1:
+		if cl.find("takes soul") != -1:
 			suspicion += 40.0
 			continue
 
-		# Generic markers from Conditions
-		if c.find("(+40 trust)") != -1:
+		# Generic (+40) markers, case-insensitive
+		if cl.find("(+40 trust)") != -1:
 			trust += 40.0
 			continue
-		if c.find("(+40 suspicion)") != -1:
+		if cl.find("(+40 suspicion)") != -1:
 			suspicion += 40.0
 			continue
 
@@ -102,71 +105,39 @@ func create_contract(soul_id: String, human_name: String, offers: Array[String],
 func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[String], human: Dictionary, equipped_traits: Array[String]) -> Dictionary:
 	var trust := 0.0
 	var suspicion := 0.0
+
+	# OFFERS → Trust
 	for l in _offers:
 		var low := l.to_lower()
 		if low.begins_with("money"):
 			var amt := _extract_int(l)
 			if amt > 0:
-				trust += float(amt) / 1000.0
-	# Detect what the human wants
-	var wants_money := _asks_money(asks)
-	var wants_skill := _asks_skill(asks)
+				trust += float(amt) / 1000.0 * TRUST_PER_1000_MONEY
+		elif low.begins_with("skill"):
+			trust += COST_SKILL  # +40
 
-	# --- TITHE: parse "%"
-	var tithe_re := RegEx.new()
-	tithe_re.compile("Tithe: Satan charges (\\d+)% of earnings")
+	# ASKS → Suspicion
+	for l in asks:
+		var low := l.to_lower()
+		if low.begins_with("skill"):
+			suspicion += COST_SKILL  # +40
 
-	for c in clauses:
-		var lower := c.to_lower()
+	# Clauses n context effects
+	var st := _compute_clause_effects(clauses, asks)
+	trust     += float(st.get("trust", 0.0))
+	suspicion += float(st.get("suspicion", 0.0))
 
-		var m := tithe_re.search(c)
-		if m:
-			var pct := float(m.get_string(1).to_int())
-			# +20 per 10% for money  -> 2 × %
-			# +10 per 10% for skill  -> 1 × %
-			if wants_money:
-				suspicion += 2.0 * pct
-			elif wants_skill:
-				suspicion += 1.0 * pct
-			continue
-
-		if lower.find("no return") != -1:
-			suspicion += 30.0
-			continue
-
-		if lower.find("evil act every day") != -1:
-			suspicion += 80.0
-			continue
-		if lower.find("evil act every week") != -1:
-			suspicion += 20.0
-			continue
-		if lower.find("evil act every month") != -1:
-			suspicion += 5.0
-			continue
-
-		if lower.find("contract is void") != -1:
-			trust += 40.0
-			continue
-		if lower.find("takes soul") != -1:
-			suspicion += 40.0
-			continue
-
-	# --- Conditions trust bumps (money/fame voids, etc.)
-	for c in clauses:
-		var lower := c.to_lower()
-		if lower.find("isn't famous") != -1 or lower.find("not received") != -1:
-			trust += 40.0
-
-	# --- Asking for Soul adds suspicion equal to soul value (Prototype Run)
+	# Asking for Soul adds suspicion equal to human's soul value
 	if _asks_soul(asks):
 		suspicion += _soul_value_for(human)
 
-	# Traits & class modifiers (as you had)
+	# Trait modifiers
 	var trust_pct := 0.0
 	var susp_pct  := 0.0
 	for t in equipped_traits:
-		if t.begins_with("charm"):      trust_pct += 0.10
-		if t.begins_with("seduction"):  susp_pct  -= 0.10
+		var tl := t.to_lower()
+		if tl.begins_with("charm"):      trust_pct += 0.10
+		if tl.begins_with("seduction"):  susp_pct  -= 0.10
 
 	var klass := String(human.get("class","")).to_lower()
 	if klass == "desperate": susp_pct -= 0.10
@@ -175,8 +146,9 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 		susp_pct += 0.20
 		trust_pct -= 0.20
 
-	trust = max(0.0, trust * (1.0 + trust_pct))
+	trust     = max(0.0, trust * (1.0 + trust_pct))
 	suspicion = max(0.0, suspicion * (1.0 + susp_pct))
+
 	return {"trust": trust, "suspicion": suspicion}
 
 func _asks_money(lines: Array[String]) -> bool:

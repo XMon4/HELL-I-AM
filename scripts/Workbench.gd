@@ -53,6 +53,12 @@ func _ready() -> void:
 	_ensure_options_layout()
 	_make_selected_lists()
 	_refresh_selected_lists()
+	
+	if Economy and Economy.has_method("get_balance") and Economy.has_method("add"):
+		var cur := int(Economy.get_balance(Economy.Currency.MONEY))
+		var target := int(GameDB.player_inventory.get("Money", 0))
+		if cur != target:
+			Economy.add(Economy.Currency.MONEY, target - cur)  # brings to 80k exactly
 
 	for s in [sec_offer, sec_ask, sec_clause]:
 		if s == null:
@@ -501,15 +507,24 @@ func _on_contracts_remaining_changed(remaining: int) -> void:
 
 func _validate() -> void:
 	var ok := (current_index >= 0) and (offers.size() > 0) and (asks.size() > 0) and (clauses.size() > 0)
+	# Contracts-per-day limit
 	if ok and ContractLimits and not ContractLimits.can_start():
 		ok = false
-		if finish_btn:
-			finish_btn.tooltip_text = "No more contracts today. Press Next Day."
+		if finish_btn: finish_btn.tooltip_text = "No more contracts today. Press Next Day."
 	else:
+		if finish_btn: finish_btn.tooltip_text = ""
+	# Suspicion must not exceed Trust by more than 4
+	var trust_i := int(trust_slider.value) if trust_slider else 0
+	var susp_i  := int(susp_slider.value)  if susp_slider  else 0
+	var diff := susp_i - trust_i
+	if ok and diff > 4:
+		ok = false
 		if finish_btn:
-			finish_btn.tooltip_text = ""
+			finish_btn.tooltip_text = "Invalid: Suspicion exceeds Trust by %d (> 4)." % diff
+
 	if finish_btn:
 		finish_btn.disabled = not ok
+
 
 func _on_finish() -> void:
 	if ContractLimits and not ContractLimits.consume_one():
@@ -520,6 +535,7 @@ func _on_finish() -> void:
 	var p: float = float(bar.value) / 100.0
 
 	# --- ECONOMY EFFECTS ---
+	# OFFERS (player gives away)
 	for o in offers:
 		var s := String(o)
 		if s.begins_with("Money"):
@@ -532,7 +548,12 @@ func _on_finish() -> void:
 			var label := s.substr(s.find(":") + 1).strip_edges()
 			var id := "skill:" + label.to_lower().replace(" ", "_")
 			GameDB.remove_skill(id)
+		elif s.begins_with("Trait"):
+			var labelt := s.substr(s.find(":") + 1).strip_edges()
+			var idt := "trait:" + labelt.to_lower().replace(" ", "_")
+			GameDB.remove_trait(idt)
 
+	# ASKS (player receives)
 	for a in asks:
 		var s2 := String(a)
 		if s2.begins_with("Soul"):
@@ -541,12 +562,16 @@ func _on_finish() -> void:
 			var m2 := _extract_int(s2)
 			if m2 > 0: Economy.add(Economy.Currency.MONEY, m2)
 		elif s2 == "Fame" or s2.begins_with("Fame"):
-			GameDB.player_inventory["Fame"] = true   # gain fame when you ask for it
+			GameDB.player_inventory["Fame"] = false  # fame is consumed
 			GameDB.emit_signal("inventory_changed")
 		elif s2.begins_with("Skill"):
 			var label2 := s2.substr(s2.find(":") + 1).strip_edges()
 			var id2 := "skill:" + label2.to_lower().replace(" ", "_")
 			GameDB.give_skill(id2)
+		elif s2.begins_with("Trait"):
+			var labelt2 := s2.substr(s2.find(":") + 1).strip_edges()
+			var idt2 := "trait:" + labelt2.to_lower().replace(" ", "_")
+			GameDB.give_trait(idt2)
 			
 	var sid := GameDB.id_by_index(current_index)
 	var sname := GameDB.name_by_index(current_index)
