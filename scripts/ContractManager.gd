@@ -4,6 +4,8 @@ var contracts: Array[Dictionary] = []
 var _next_id: int = 1
 const TRUST_PER_1000_MONEY := 1.0
 const COST_SKILL := 40.0
+const COST_TRAIT := 40.0
+const COST_BUSINESS_SILVER := 80.0
 
 func evaluate(offers: Array[String], asks: Array[String], clauses: Array[String], _traits: Dictionary) -> float:
 	var score := 0.0
@@ -106,7 +108,7 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 	var trust := 0.0
 	var suspicion := 0.0
 
-	# OFFERS → Trust
+	# ---- OFFERS → Trust
 	for l in _offers:
 		var low := l.to_lower()
 		if low.begins_with("money"):
@@ -114,37 +116,59 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 			if amt > 0:
 				trust += float(amt) / 1000.0 * TRUST_PER_1000_MONEY
 		elif low.begins_with("skill"):
-			trust += COST_SKILL  # +40
+			# “Mental business (silver)”
+			if low.find("business mentality (silver)") != -1 or low.find("mental business (silver)") != -1:
+				trust += COST_BUSINESS_SILVER
+			else:
+				trust += COST_SKILL
+		elif low.begins_with("trait"):
+			trust += COST_TRAIT
 
-	# ASKS → Suspicion
+	# ---- ASKS → Suspicion
 	for l in asks:
 		var low := l.to_lower()
 		if low.begins_with("skill"):
-			suspicion += COST_SKILL  # +40
+			if low.find("business mentality (silver)") != -1 or low.find("mental business (silver)") != -1:
+				suspicion += COST_BUSINESS_SILVER
+			else:
+				suspicion += COST_SKILL
+		elif low.begins_with("trait"):
+			suspicion += COST_TRAIT
 
-	# Clauses n context effects
+	# ---- Clauses/context
 	var st := _compute_clause_effects(clauses, asks)
 	trust     += float(st.get("trust", 0.0))
 	suspicion += float(st.get("suspicion", 0.0))
 
-	# Asking for Soul adds suspicion equal to human's soul value
+	# ---- Asking for Soul adds suspicion by difficulty
 	if _asks_soul(asks):
 		suspicion += _soul_value_for(human)
 
-	# Trait modifiers
+	# ---- Modifiers
 	var trust_pct := 0.0
 	var susp_pct  := 0.0
+
+	# Player equipped traits
 	for t in equipped_traits:
 		var tl := t.to_lower()
 		if tl.begins_with("charm"):      trust_pct += 0.10
 		if tl.begins_with("seduction"):  susp_pct  -= 0.10
 
+	# Human class
 	var klass := String(human.get("class","")).to_lower()
 	if klass == "desperate": susp_pct -= 0.10
 	if klass == "naive":     trust_pct += 0.10
 	if klass == "lawyer":
 		susp_pct += 0.20
 		trust_pct -= 0.20
+
+	# Human trait: Manipulation → extra -10% trust
+	var inv := human.get("inv", {}) as Dictionary
+	for k in inv.keys():
+		var kl := String(k).to_lower()
+		if inv[k] and kl.find("trait: manipulation") != -1:
+			trust_pct -= 0.10
+			break
 
 	trust     = max(0.0, trust * (1.0 + trust_pct))
 	suspicion = max(0.0, suspicion * (1.0 + susp_pct))

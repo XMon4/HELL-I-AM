@@ -506,16 +506,30 @@ func _on_contracts_remaining_changed(remaining: int) -> void:
 	_validate()
 
 func _validate() -> void:
-	var ok := (current_index >= 0) and (offers.size() > 0) and (asks.size() > 0) and (clauses.size() > 0)
-	# Contracts-per-day limit
+	var ok := (current_index >= 0) and (offers.size() > 0) and (asks.size() > 0)
+
+	# daily limit
 	if ok and ContractLimits and not ContractLimits.can_start():
 		ok = false
-		if finish_btn: finish_btn.tooltip_text = "No more contracts today. Press Next Day."
+		if finish_btn:
+			finish_btn.tooltip_text = "No more contracts today. Press Next Day."
 	else:
-		if finish_btn: finish_btn.tooltip_text = ""
-	# Suspicion must not exceed Trust by more than 4
-	var trust_i := int(trust_slider.value) if trust_slider else 0
-	var susp_i  := int(susp_slider.value)  if susp_slider  else 0
+		if finish_btn:
+			finish_btn.tooltip_text = ""
+
+	# --- use explicit locals instead of ternary
+	var human: Dictionary = {}
+	if current_index >= 0 and current_index < GameDB.index_count():
+		human = GameDB.souls[current_index]
+
+	var eq: Array[String] = []
+	if GameDB and GameDB.has_method("get_equipped_traits"):
+		eq = GameDB.get_equipped_traits()
+
+	var bars := ContractManager.compute_bars(offers, asks, clauses, human, eq)
+	var trust_i := int(round(float(bars.get("trust", 0.0))))
+	var susp_i  := int(round(float(bars.get("suspicion", 0.0))))
+
 	var diff := susp_i - trust_i
 	if ok and diff > 4:
 		ok = false
@@ -524,7 +538,6 @@ func _validate() -> void:
 
 	if finish_btn:
 		finish_btn.disabled = not ok
-
 
 func _on_finish() -> void:
 	if ContractLimits and not ContractLimits.consume_one():
