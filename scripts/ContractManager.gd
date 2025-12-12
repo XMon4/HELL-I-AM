@@ -6,6 +6,13 @@ const TRUST_PER_1000_MONEY := 1.0
 const COST_SKILL := 40.0
 const COST_TRAIT := 40.0
 const COST_BUSINESS_SILVER := 80.0
+const DEFAULT_TRUST_PER_OFFER := 10.0
+const DEFAULT_SUSPICION_PER_ASK := 10.0
+const SUSPICION_PER_1000_MONEY := 1.0
+const TRUST_PER_YEAR_OF_LIFE := 5.0
+const SUSPICION_PER_YEAR_OF_LIFE := 5.0
+const TRUST_FAME_LOCAL := 40.0
+const TRUST_FAME_NATIONAL := 80.0
 
 func evaluate(offers: Array[String], asks: Array[String], clauses: Array[String], _traits: Dictionary) -> float:
 	var score := 0.0
@@ -111,29 +118,69 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 	# ---- OFFERS → Trust
 	for l in _offers:
 		var low := l.to_lower()
+		var added := false
 		if low.begins_with("money"):
 			var amt := _extract_int(l)
 			if amt > 0:
 				trust += float(amt) / 1000.0 * TRUST_PER_1000_MONEY
+				added = true
+		elif low.begins_with("years of life"):
+			var yrs := _extract_int(l)
+			if yrs > 0:
+				trust += float(yrs) * TRUST_PER_YEAR_OF_LIFE
+				added = true
+		elif low.begins_with("fame"):
+			trust += TRUST_FAME_NATIONAL if low.find("national") != -1 else TRUST_FAME_LOCAL
+			added = true
 		elif low.begins_with("skill"):
 			# “Mental business (silver)”
 			if low.find("business mentality (silver)") != -1 or low.find("mental business (silver)") != -1:
 				trust += COST_BUSINESS_SILVER
 			else:
 				trust += COST_SKILL
+			added = true
 		elif low.begins_with("trait"):
 			trust += COST_TRAIT
+			added = true
+		# default: ANY offer contributes trust
+		if not added:
+			trust += DEFAULT_TRUST_PER_OFFER
 
 	# ---- ASKS → Suspicion
 	for l in asks:
 		var low := l.to_lower()
-		if low.begins_with("skill"):
+		var added := false
+
+		# Soul is handled separately (adds suspicion by soul value)
+		if low == "soul" or low.begins_with("soul") or low.find("soul") != -1:
+			added = true
+		elif low.begins_with("money"):
+			var amt := _extract_int(l)
+			if amt > 0:
+				suspicion += float(amt) / 1000.0 * SUSPICION_PER_1000_MONEY
+				added = true
+		elif low.begins_with("years of life"):
+			var yrs := _extract_int(l)
+			if yrs > 0:
+				suspicion += float(yrs) * SUSPICION_PER_YEAR_OF_LIFE
+				added = true
+		elif low.begins_with("fame"):
+			# Asking for fame is suspicious by default
+			suspicion += DEFAULT_SUSPICION_PER_ASK
+			added = true
+		elif low.begins_with("skill"):
 			if low.find("business mentality (silver)") != -1 or low.find("mental business (silver)") != -1:
 				suspicion += COST_BUSINESS_SILVER
 			else:
 				suspicion += COST_SKILL
+			added = true
 		elif low.begins_with("trait"):
 			suspicion += COST_TRAIT
+			added = true
+
+		# default: ANY ask contributes suspicion
+		if not added:
+			suspicion += DEFAULT_SUSPICION_PER_ASK
 
 	# ---- Clauses/context
 	var st := _compute_clause_effects(clauses, asks)

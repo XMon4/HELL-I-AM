@@ -8,6 +8,8 @@ signal contract_ready(
 	acceptance: float
 )
 
+const STAT_BAR_CAP := 300
+
 # --- Stat bars
 @onready var susp_slider: Range      = $"BarsDock/SuspSlider"
 @onready var trust_slider: Range     = $"BarsDock/TrustSlider"
@@ -77,10 +79,10 @@ func _ready() -> void:
 
 	if susp_slider:
 		susp_slider.min_value = 0
-		susp_slider.max_value = 100
+		susp_slider.max_value = STAT_BAR_CAP
 	if trust_slider:
 		trust_slider.min_value = 0
-		trust_slider.max_value = 100
+		trust_slider.max_value = STAT_BAR_CAP
 
 	_show_hint("Tap Offer / Ask / Clauses to see options.")
 	_refresh_accept()
@@ -483,8 +485,8 @@ func _refresh_accept() -> void:
 		susp_f  = float(st.get("suspicion", 0.0))
 
 	# Clamp to 0..100 and push to UI
-	var trust_i := clampi(int(round(trust_f)), 0, 100)
-	var susp_i  := clampi(int(round(susp_f)),  0, 100)
+	var trust_i := clampi(int(round(trust_f)), 0, STAT_BAR_CAP)
+	var susp_i  := clampi(int(round(susp_f)),  0, STAT_BAR_CAP)
 
 	if trust_slider:     trust_slider.value = trust_i
 	if susp_slider:      susp_slider.value  = susp_i

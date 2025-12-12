@@ -31,11 +31,11 @@ script = ExtResource("1_ogq0w")
 metadata/_tab_index = 0
 
 [node name="BarsDock" type="VBoxContainer" parent="."]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 0
 offset_left = 336.0
 offset_top = 56.0
-offset_right = 426.0
+offset_right = 516.0
 offset_bottom = 130.0
 
 [node name="Susp_Row" type="HBoxContainer" parent="BarsDock"]
@@ -53,8 +53,10 @@ text = "0"
 
 [node name="SuspSlider" type="ProgressBar" parent="BarsDock"]
 modulate = Color(0.886275, 0.54902, 0.54902, 1)
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
-max_value = 200.0
+size_flags_horizontal = 3
+max_value = 300.0
 show_percentage = false
 
 [node name="Trust_Row" type="HBoxContainer" parent="BarsDock"]
@@ -72,8 +74,10 @@ text = "0"
 
 [node name="TrustSlider" type="ProgressBar" parent="BarsDock"]
 modulate = Color(0.552941, 0.776471, 0.94902, 1)
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
-max_value = 200.0
+size_flags_horizontal = 3
+max_value = 300.0
 show_percentage = false
 
 [node name="WB_VBox" type="VBoxContainer" parent="."]
