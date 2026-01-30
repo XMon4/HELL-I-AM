@@ -77,7 +77,7 @@ func set_items(items: Array[Dictionary]) -> void:
 	for d in items:
 		var lbl := String(d.get("label", ""))
 		list.add_item(lbl)
-		list.set_item_metadata(list.get_item_count() - 1, d.get("meta", {}))
+		list.set_item_metadata(list.get_item_count() - 1, d) # store whole dict
 	emit_signal("items_changed", section_key, get_labels(), get_items_meta())
 
 func clear() -> void:

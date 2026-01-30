@@ -7,10 +7,11 @@ signal inventory_changed
 
 # ----- player inventory -----
 var player_inventory := {
-	"Money": 80000,        # can edit for testing
-	"Years of life": 10,
+	"Money": 80000,
+	"Lifespan": 10,
 	"Fame": true
 }
+
 var player := player_inventory  # legacy alias
 var traits_owned := {}            # {"charm_bronze": true, "seduction_bronze": true}
 var skills_owned := {             # {"guitar_bronze": true}
@@ -19,6 +20,41 @@ var skills_owned := {             # {"guitar_bronze": true}
 var equipped_traits: Array[String] = []
 var max_trait_slots := 1
 var souls_currency := 0           # spent in Power Store
+var bodies_owned: Array[Dictionary] = [
+  {"id":"b_001","type":"Healthy","gender":"female","age":24}
+]
+const BODY_VALUE := {
+  "Beautiful": 40,
+  "Healthy": 20,
+  "Sick": 10,
+  "Dying": 3
+}
+func add_lifespan(delta: int) -> void:
+	player_inventory["Lifespan"] = max(0, get_lifespan() + delta)
+	emit_signal("inventory_changed")
+
+func remove_body_by_id(body_id: String) -> bool:
+	for i in range(bodies_owned.size()):
+		if bodies_owned[i].get("id","") == body_id:
+			bodies_owned.remove_at(i)
+			emit_signal("inventory_changed")
+			return true
+	return false
+
+func add_body(b: Dictionary) -> void:
+	if not b.has("id"):
+		b["id"] = "b_" + str(Time.get_ticks_msec())
+	bodies_owned.append(b)
+	emit_signal("inventory_changed")
+
+func body_to_label(b: Dictionary) -> String:
+	return "Body: [%s] [%s] [%s]" % [b.get("gender","?"), str(b.get("age","?")), b.get("type","?")]
+
+func body_value(b: Dictionary) -> int:
+	return int(BODY_VALUE.get(b.get("type","Healthy"), 0))
+
+func get_lifespan() -> int:
+	return int(player_inventory.get("Lifespan", 0))
 
 func get_equipped_traits() -> Array[String]:
 	return equipped_traits.duplicate()
@@ -38,17 +74,21 @@ func give_trait(id:String) -> void:
 	emit_signal("inventory_changed")
 	
 func remove_trait(id:String) -> void:
-	if traits_owned.has(id):
-		traits_owned[id] = false
-		emit_signal("inventory_changed")
-		
+	traits_owned.erase(id)
+	equipped_traits.erase(id)
+	emit_signal("inventory_changed")
+
 func equip_trait(id:String) -> bool:
-	if not traits_owned.has(id): return false
+	if not bool(traits_owned.get(id, false)): return false
 	if equipped_traits.has(id): return true
 	if equipped_traits.size() >= max_trait_slots: return false
 	equipped_traits.append(id)
 	emit_signal("inventory_changed")
 	return true
+
+func remove_skill(id:String) -> void:
+	skills_owned.erase(id)
+	emit_signal("inventory_changed")
 
 func unequip_trait(id:String) -> void:
 	equipped_traits.erase(id)
@@ -70,25 +110,50 @@ func _pretty_from_skill_id(id: String) -> String:
 # ----- souls (PUBLIC, used by main.gd and panels) -----
 # Each soul now may include:
 var souls: Array[Dictionary] = [
-{"id":"s_ratzz",  "name":"Ratzz",  "class":"desperate","difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
-{"id":"s_susie","name":"Susie", "class":"naive",    "difficulty":"easy","desire":"money",     "inv":{"Soul":true}},
-
-{"id":"s_andrew","name":"Andrew","class":"", "difficulty":"medium","desire":"fame",
- "inv":{"Soul":true, "Trait: Charm (bronze)":true, "Skill: Guitar Player (bronze)":true}},
-
-{"id":"s_cecylia","name":"Cecylia","class":"", "difficulty":"medium","desire":"happiness",
- "inv":{"Soul":true, "Trait: Seduction (bronze)":true, "Skill: Mental business (bronze)":true}},
-
-{"id":"s_vixy",  "name":"Vixy",  "class":"", "difficulty":"medium","desire":"revenge",
- "inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Tactician (bronze)":true}},
-
-{"id":"s_marcus","name":"Marcus","class":"", "difficulty":"medium","desire":"happiness",
- "inv":{"Soul":true, "Trait: Intelligence (bronze)":true, "Skill: Card Player (bronze)":true}},
-
-{"id":"s_reggie","name":"Reggie","class":"lawyer","difficulty":"hard","desire":"happiness",
- "inv":{"Soul":true, "Trait: Manipulation (bronze)":true, "Skill: Business Mentality (silver)":true}},
-
+	{
+		"id":"s_ratzz","name":"Ratzz","class":"desperate","difficulty":"easy","desire":"money",
+		"body": {"id":"npc_body_s_ratzz","type":"Sick","gender":"male","age":37},
+		"lifespan": 33,
+		"inv": {"Soul": true}
+	},
+	{
+		"id":"s_susie","name":"Susie","class":"naive","difficulty":"easy","desire":"money",
+		"body": {"id":"npc_body_s_susie","type":"Healthy","gender":"female","age":22},
+		"lifespan": 48,
+		"inv": {"Soul": true}
+	},
+	{
+		"id":"s_andrew","name":"Andrew","class":"","difficulty":"medium","desire":"fame",
+		"body": {"id":"npc_body_s_andrew","type":"Healthy","gender":"male","age":30},
+		"lifespan": 40,
+		"inv": {"Soul": true, "Trait: Charm (bronze)": true, "Skill: Guitar Player (bronze)": true}
+	},
+	{
+		"id":"s_cecylia","name":"Cecylia","class":"","difficulty":"medium","desire":"happiness",
+		"body": {"id":"npc_body_s_cecylia","type":"Beautiful","gender":"female","age":28},
+		"lifespan": 42,
+		"inv": {"Soul": true, "Trait: Seduction (bronze)": true, "Skill: Mental business (bronze)": true}
+	},
+	{
+		"id":"s_vixy","name":"Vixy","class":"","difficulty":"medium","desire":"revenge",
+		"body": {"id":"npc_body_s_vixy","type":"Healthy","gender":"female","age":26},
+		"lifespan": 44,
+		"inv": {"Soul": true, "Trait: Intelligence (bronze)": true, "Skill: Tactician (bronze)": true}
+	},
+	{
+		"id":"s_marcus","name":"Marcus","class":"","difficulty":"medium","desire":"happiness",
+		"body": {"id":"npc_body_s_marcus","type":"Sick","gender":"male","age":41},
+		"lifespan": 29,
+		"inv": {"Soul": true, "Trait: Intelligence (bronze)": true, "Skill: Card Player (bronze)": true}
+	},
+	{
+		"id":"s_reggie","name":"Reggie","class":"lawyer","difficulty":"hard","desire":"happiness",
+		"body": {"id":"npc_body_s_reggie","type":"Dying","gender":"male","age":55},
+		"lifespan": 15,
+		"inv": {"Soul": true, "Trait: Manipulation (bronze)": true, "Skill: Business Mentality (silver)": true}
+	},
 ]
+
 # ----- clause & condition catalog (SOURCE OF TRUTH) -----
 const CAT_CLAUSE    := "clause"
 const CAT_CONDITION := "condition"
@@ -197,17 +262,23 @@ func get_conditions_only() -> Array[Dictionary]:
 var _portrait_cache: Dictionary = {}
 
 func add_soul_profile(p: Dictionary) -> void:
-	# Minimal normalized record (keeps backward compat with existing UI)
 	var s := {
-		"id":      p.get("id",""),
-		"name":    p.get("name",""),
-		"portrait":p.get("portrait",""),   # new
-		"desire":  p.get("desire",""),     # new
-		"inv":     p.get("inv", {}),       # inventory / asks
-		"traits":  p.get("traits", {}),    # used by acceptance later
-		"skills":  p.get("skills", [])     # optional
+		"id":       p.get("id",""),
+		"name":     p.get("name",""),
+		"portrait": p.get("portrait",""),
+		"desire":   p.get("desire",""),
+
+		# NEW:
+		"body":     p.get("body", {}),
+		"lifespan": int(p.get("lifespan", 0)),
+		"body_need": p.get("body_need", ""), # maybe Transformation later)
+
+		"inv":      p.get("inv", {}),
+		"traits":   p.get("traits", {}),
+		"skills":   p.get("skills", [])
 	}
 	souls.append(s)
+
 
 func get_desire_for_index(i: int) -> String:
 	if i < 0 or i >= souls.size(): return ""
@@ -239,11 +310,6 @@ func give_skill(id:String) -> void:
 	skills_owned[id] = true
 	emit_signal("inventory_changed")
 	
-func remove_skill(id:String) -> void:
-	if skills_owned.has(id):
-		skills_owned[id] = false
-		emit_signal("inventory_changed")
-
 # ----- ongoing contracts -----
 var ongoing_contracts: Array[Dictionary] = []   # [{soul_id,name,offers,asks,clauses,acceptance}]
 
@@ -260,6 +326,8 @@ func _ready() -> void:
 	# Initialize mirror now
 	souls_currency = Economy.get_balance(Economy.Currency.SOULS)
 	inventory_changed.emit()  # UI refresh
+	emit_signal("souls_changed")
+
 
 func _try_hook_economy() -> void:
 	if Economy and not Economy.balance_changed.is_connected(Callable(self, "_on_bal")):
@@ -299,7 +367,9 @@ func seed_if_empty(count: int = 0) -> void:
 		"name":"Andrew",
 		"portrait":"res://art/Andrew.png",
 		"desire":"fame",
-		"inv": {"Soul": true, "Body": true, "Money": 1200, "Guitar Player (Bronze)": true},
+	"body": {"id":"npc_body_s_andrew","type":"Healthy","gender":"male","age":30},
+	"lifespan": 40,
+	"inv": {"Soul": true, "Money": 1200, "Guitar Player (Bronze)": true},
 		"traits": {"morality": 30, "cowardice": 20, "charm": "bronze"},
 		"skills": ["Guitar Player (Bronze)"]
 	})
@@ -310,7 +380,9 @@ func seed_if_empty(count: int = 0) -> void:
 		"name":"Vixy",
 		"portrait":"res://art/Vixy.png",
 		"desire":"revenge",
-		"inv": {"Soul": true, "Body": true, "Money": 800, "Tactician (Bronze)": true},
+	"body": {"id":"npc_body_s_vixy","type":"Healthy","gender":"female","age":26},
+	"lifespan": 44,
+	"inv": {"Soul": true, "Money": 800, "Tactician (Bronze)": true},
 		"traits": {"morality": -30, "cowardice": 5, "intelligence": "bronze"},
 		"skills": ["Tactician (Bronze)"]
 	})
@@ -321,7 +393,9 @@ func seed_if_empty(count: int = 0) -> void:
 		"name":"Cecylia",
 		"portrait":"res://art/Cecylia.png",
 		"desire":"happiness",
-		"inv": {"Soul": true, "Body": true, "Money": 2500, "Business mental (Bronze)": true},
+	"body": {"id":"npc_body_s_cecylia","type":"Beautiful","gender":"female","age":28},
+	"lifespan": 42,
+	"inv": {"Soul": true, "Money": 2500, "Business mental (Bronze)": true},
 		"traits": {"morality": -20, "cowardice": 20, "seduction": "bronze"},
 		"skills": ["Business mental (Bronze)"]
 	})
@@ -363,15 +437,27 @@ func list_player_offers() -> Array[String]:
 			can_national = ProducerSystem.can_offer_fame_tier("National")
 		if can_national:
 			out.append("Fame (National)")
-
+	for b in bodies_owned:
+		out.append(body_to_label(b))
 	return out
 
 func list_soul_asks(soul_id: String) -> Array[String]:
 	var s := _find_soul(soul_id)
 	if s.is_empty():
 		return []
-	var inv: Dictionary = s.get("inv", {})
+
 	var out: Array[String] = []
+
+	# NEW: Body line (mockup)
+	if s.has("body") and s["body"] is Dictionary:
+		out.append(body_to_label(s["body"]))
+
+	# NEW: Lifespan line (askable in 5s later)
+	if s.has("lifespan"):
+		out.append("Lifespan: %d" % int(s["lifespan"]))
+
+	# existing inv items
+	var inv: Dictionary = s.get("inv", {})
 	for k in inv.keys():
 		var v = inv[k]
 		if v is int:
@@ -379,7 +465,9 @@ func list_soul_asks(soul_id: String) -> Array[String]:
 			out.append("%s: %s" % [k, val_text])
 		else:
 			out.append(k)
+
 	return out
+
 
 # ====== utilities ======
 func index_count() -> int:

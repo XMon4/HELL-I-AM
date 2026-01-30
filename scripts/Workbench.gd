@@ -48,6 +48,9 @@ var _offer_list: VBoxContainer
 var _ask_list: VBoxContainer
 var _clause_list: VBoxContainer
 
+var offer_body_meta: Dictionary = {} # store offered body id
+var ask_body_meta: Dictionary = {}   # store asked body dict (human body)
+
 func _ready() -> void:
 	if sec_offer:  sec_offer.section_key  = "offer"
 	if sec_ask:    sec_ask.section_key    = "ask"
@@ -510,16 +513,36 @@ func _on_contracts_remaining_changed(remaining: int) -> void:
 func _validate() -> void:
 	var ok := (current_index >= 0) and (offers.size() > 0) and (asks.size() > 0)
 
+	if finish_btn:
+		finish_btn.tooltip_text = ""
+
+	# count bodies
+	var offer_body_count := 0
+	for o in offers:
+		if String(o).begins_with("Body:"):
+			offer_body_count += 1
+
+	var ask_body_count := 0
+	for a in asks:
+		if String(a).begins_with("Body:"):
+			ask_body_count += 1
+
+	# only 1 body each side
+	if ok and (offer_body_count > 1 or ask_body_count > 1):
+		ok = false
+		if finish_btn: finish_btn.tooltip_text = "Only 1 Body allowed on each side."
+
+	# swap required
+	if ok and ((offer_body_count == 1) != (ask_body_count == 1)):
+		ok = false
+		if finish_btn: finish_btn.tooltip_text = "Body trade requires a Body in BOTH Offer and Ask."
+
 	# daily limit
 	if ok and ContractLimits and not ContractLimits.can_start():
 		ok = false
-		if finish_btn:
-			finish_btn.tooltip_text = "No more contracts today. Press Next Day."
-	else:
-		if finish_btn:
-			finish_btn.tooltip_text = ""
+		if finish_btn: finish_btn.tooltip_text = "No more contracts today. Press Next Day."
 
-	# --- use explicit locals instead of ternary
+	# suspicion/trust rule
 	var human: Dictionary = {}
 	if current_index >= 0 and current_index < GameDB.index_count():
 		human = GameDB.souls[current_index]
@@ -535,8 +558,7 @@ func _validate() -> void:
 	var diff := susp_i - trust_i
 	if ok and diff > 4:
 		ok = false
-		if finish_btn:
-			finish_btn.tooltip_text = "Invalid: Suspicion exceeds Trust by %d (> 4)." % diff
+		if finish_btn: finish_btn.tooltip_text = "Invalid: Suspicion exceeds Trust by %d (> 4)." % diff
 
 	if finish_btn:
 		finish_btn.disabled = not ok
@@ -567,6 +589,15 @@ func _on_finish() -> void:
 			var labelt := s.substr(s.find(":") + 1).strip_edges()
 			var idt := "trait:" + labelt.to_lower().replace(" ", "_")
 			GameDB.remove_trait(idt)
+		elif s.begins_with("Lifespan"):
+			var n := _extract_int(s)
+			if n > 0:
+				GameDB.add_lifespan(-n)
+		elif s.begins_with("Body:"):
+			var bid := _find_owned_body_id_by_label(s)
+			if bid != "":
+				GameDB.remove_body_by_id(bid)
+
 
 	# ASKS (player receives)
 	for a in asks:
@@ -587,7 +618,20 @@ func _on_finish() -> void:
 			var labelt2 := s2.substr(s2.find(":") + 1).strip_edges()
 			var idt2 := "trait:" + labelt2.to_lower().replace(" ", "_")
 			GameDB.give_trait(idt2)
-			
+		elif s2.begins_with("Lifespan"):
+			var n2 := _extract_int(s2)
+			if n2 > 0:
+				GameDB.add_lifespan(n2)
+		elif s2.begins_with("Body:"):
+			var human2: Dictionary = GameDB.souls[current_index]
+			if human2.has("body") and human2["body"] is Dictionary:
+				var bdict: Dictionary = human2["body"]
+				if GameDB.body_to_label(bdict) == s2:
+					# Copy the body and drop the NPC id so the player-owned body gets a unique id.
+					var copy: Dictionary = bdict.duplicate(true)
+					copy.erase("id")
+					GameDB.add_body(copy)
+
 	var sid := GameDB.id_by_index(current_index)
 	var sname := GameDB.name_by_index(current_index)
 	var contract := {
@@ -607,6 +651,12 @@ func _on_finish() -> void:
 # --- helpers ---
 func _sections() -> Array:
 	return [sec_offer, sec_ask, sec_clause]
+	
+func _find_owned_body_id_by_label(label: String) -> String:
+	for b in GameDB.bodies_owned:
+		if GameDB.body_to_label(b) == label:
+			return String(b.get("id",""))
+	return ""
 
 func _reset_sections() -> void:
 	for s in _sections():

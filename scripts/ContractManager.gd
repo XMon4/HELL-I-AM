@@ -9,10 +9,16 @@ const COST_BUSINESS_SILVER := 80.0
 const DEFAULT_TRUST_PER_OFFER := 10.0
 const DEFAULT_SUSPICION_PER_ASK := 10.0
 const SUSPICION_PER_1000_MONEY := 1.0
-const TRUST_PER_YEAR_OF_LIFE := 5.0
-const SUSPICION_PER_YEAR_OF_LIFE := 5.0
+const TRUST_PER_LIFESPAN := 5.0
+const SUSPICION_PER_LIFESPAN := 5.0
 const TRUST_FAME_LOCAL := 40.0
 const TRUST_FAME_NATIONAL := 80.0
+const BODY_POINTS := {
+	"beautiful": 40.0,
+	"healthy": 20.0,
+	"sick": 10.0,
+	"dying": 3.0
+}
 
 func evaluate(offers: Array[String], asks: Array[String], clauses: Array[String], _traits: Dictionary) -> float:
 	var score := 0.0
@@ -21,16 +27,20 @@ func evaluate(offers: Array[String], asks: Array[String], clauses: Array[String]
 	for l in offers:
 		if l.begins_with("Money"):
 			score += 5.0
-		elif l.find("Years of life") != -1:
+		elif _is_lifespan_line(l):
 			score += 8.0
+		elif _is_body_line(l):
+			score += 6.0
 		else:
 			score += 4.0
 
 	for l2 in asks:
 		if l2.begins_with("Money"):
 			score -= 5.0
-		elif l2.find("Years of life") != -1:
+		elif _is_lifespan_line(l2):
 			score -= 10.0
+		elif _is_body_line(l2):
+			score -= 8.0
 		else:
 			score -= 6.0
 
@@ -124,10 +134,10 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 			if amt > 0:
 				trust += float(amt) / 1000.0 * TRUST_PER_1000_MONEY
 				added = true
-		elif low.begins_with("years of life"):
+		elif low.begins_with("lifespan"):
 			var yrs := _extract_int(l)
 			if yrs > 0:
-				trust += float(yrs) * TRUST_PER_YEAR_OF_LIFE
+				trust += float(yrs) * TRUST_PER_LIFESPAN
 				added = true
 		elif low.begins_with("fame"):
 			trust += TRUST_FAME_NATIONAL if low.find("national") != -1 else TRUST_FAME_LOCAL
@@ -141,6 +151,9 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 			added = true
 		elif low.begins_with("trait"):
 			trust += COST_TRAIT
+			added = true
+		elif low.begins_with("body:"):
+			trust += _body_points_from_label(l)
 			added = true
 		# default: ANY offer contributes trust
 		if not added:
@@ -159,10 +172,10 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 			if amt > 0:
 				suspicion += float(amt) / 1000.0 * SUSPICION_PER_1000_MONEY
 				added = true
-		elif low.begins_with("years of life"):
+		elif low.begins_with("lifespan"):
 			var yrs := _extract_int(l)
 			if yrs > 0:
-				suspicion += float(yrs) * SUSPICION_PER_YEAR_OF_LIFE
+				suspicion += float(yrs) * SUSPICION_PER_LIFESPAN
 				added = true
 		elif low.begins_with("fame"):
 			# Asking for fame is suspicious by default
@@ -177,7 +190,9 @@ func compute_bars(_offers: Array[String], asks: Array[String], clauses: Array[St
 		elif low.begins_with("trait"):
 			suspicion += COST_TRAIT
 			added = true
-
+		elif low.begins_with("body:"):
+			suspicion += _body_points_from_label(l)
+			added = true
 		# default: ANY ask contributes suspicion
 		if not added:
 			suspicion += DEFAULT_SUSPICION_PER_ASK
@@ -261,3 +276,17 @@ func _soul_value_for(human: Dictionary) -> int:
 	if diff == "medium": return 120 # mid of 100-140
 	if diff == "hard": return 150   # mid of 130-170
 	return 50
+func _is_lifespan_line(l: String) -> bool:
+	return l.to_lower().begins_with("lifespan")
+
+func _is_body_line(l: String) -> bool:
+	return l.to_lower().begins_with("body:")
+
+func _body_points_from_label(l: String) -> float:
+	# expects: Body: [gender] [age] [Type]
+	var open := l.rfind("[")
+	var close := l.rfind("]")
+	if open == -1 or close == -1 or close <= open:
+		return 0.0
+	var typ := l.substr(open + 1, close - open - 1).strip_edges().to_lower()
+	return float(BODY_POINTS.get(typ, 0.0))

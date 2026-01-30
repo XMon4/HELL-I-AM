@@ -1,38 +1,53 @@
 extends Node
-# (intentionally no class_name to avoid autoload name collisions)
 
-func generate_soul(index: int) -> Dictionary:
-	var human_name = "Human %d" % (index + 1)
+# Procedural soul generator used by SoulsPanel's "New" button.
+# Body + Lifespan are now separate from inv.
 
-	# simple inventory; no trailing commas, no fancy typing
-	var inv = {
-		"Soul": true,
-		"Body": true,
-		"Years of life": 10 + (index % 31)
+const BODY_TYPES: Array[String] = ["Beautiful", "Healthy", "Sick", "Dying"]
+const GENDERS: Array[String] = ["male", "female"]
+const CLASSES: Array[String] = ["naive", "desperate", "lawyer"]
+const DIFFICULTIES: Array[String] = ["easy", "medium", "hard"]
+
+
+func generate_soul(i: int) -> Dictionary:
+	# Ensure we don't accidentally reuse an id if the player spam-clicks.
+	var salt := int(Time.get_ticks_msec()) % 100000
+	var soul_id := "s_proc_%d_%d" % [i, salt]
+
+	var gender: String = GENDERS[randi() % GENDERS.size()]
+	var age := randi_range(18, 70)
+	var btype: String = BODY_TYPES[randi() % BODY_TYPES.size()]
+	var body := {
+		"id": "npc_body_%s" % soul_id,
+		"gender": gender,
+		"age": age,
+		"type": btype,
 	}
 
-	# deterministic extra perk; Money -> int, others -> bool
-	var pool = ["Musical skill", "Beauty", "Card skill", "Charisma", "Money"]
-	var pick = pool[index % pool.size()]
-	if pick == "Money":
-		inv[pick] = 10000 + index * 1337
-	else:
-		inv[pick] = true
+	# Lifespan is now an inventory-like persistent resource for the player,
+	# but a soul can still "have" a lifespan value for contract asks.
+	# Keep it in 5-year chunks.
+	var lifespan := int(round(float(randi_range(5, 60)) / 5.0)) * 5
+	lifespan = clampi(lifespan, 5, 60)
 
-	# tiny trait hook for later debt logic
-	var trait_pool = ["honorable", "average", "desperate", "schemer"]
-	var persona = trait_pool[index % trait_pool.size()]
+	var inv: Dictionary = {"Soul": true}
+	if randf() < 0.60:
+		inv["Money"] = randi_range(500, 30000)
+	if randf() < 0.15:
+		inv["Fame"] = true
 
-	var traits = {
-		"morality": "neutral",
-		"fear": 0.2,
-		"greed": 0.5,
-		"persona": persona
-	}
+	var traits: Dictionary = {}
+	if randf() < 0.12:
+		traits["Trait: manipulation"] = true
 
 	return {
-		"id": "s_%d" % (index + 1),
-		"name": human_name,
+		"id": soul_id,
+		"name": "Human %d" % (i + 1),
+		"difficulty": DIFFICULTIES[randi() % DIFFICULTIES.size()],
+		"class": CLASSES[randi() % CLASSES.size()],
+		"desire": "money",
 		"inv": inv,
-		"traits": traits
+		"traits": traits,
+		"body": body,
+		"lifespan": lifespan,
 	}
